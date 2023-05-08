@@ -29,6 +29,6 @@ int main(int argc, char *argv[])
         fgets(CLI[i].email,30,stdin);
         fflush(stdin);//Limpia la pantalla con los datos ingresados para que en el nuevo ciclo for no sea visible
     }
-
+////////////
     return 0;
 }
