@@ -1,28 +1,44 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define MAX_CLIENTES 10 //Numero maximo de clientes que se pueden almacenar
+
+/*Prototipo de las Funciones*/
+
+void menu();
+
 /* Estructura de Datos del Cliente*/
 
 typedef struct
 {
-    char apellidoYNombre[30];
-    char sexo[2];
-    int dni[8];
-    int telefono[15];
+    char nombre[20];
+    char apellido[20];
+    char sexo;
+    double dni;
+    char direccion[50];
+    char telefono[15];
     char email[30];
-} infoCliente;
+}cliente;
 
-/*Llamada a funciones*/
+/* Estructura de Datos del Cuenta*/
 
-void menu();
+typedef struct{
+    int numero_cuenta;
+    float saldo;
+}cuenta;
+
 
 /*Funcion principal Main*/
 
-int main(int argc, char *argv[])
+int main()
 {
-    int opcion;
-    float saldo;
+    struct cliente clientes[MAX_CLIENTES]; //Array para almacenar las cuentas de los clientes
+    int num_clientes = 0;
+
+
     menu();
+    // Leer la opcion seleccionada por el usuario Menu
+    int opcion;
     printf("\nIngrese una opcion: ");
     scanf("%i",&opcion);
 
@@ -55,6 +71,7 @@ int main(int argc, char *argv[])
 /*Funcion Menu*/
 
 void menu(){
+    //Mostrar Menu de opciones
     printf("========================================================================================\n");
     printf("\t\t                       Bienvenido a Bacox!\n");
     printf("========================================================================================\n");
@@ -72,25 +89,29 @@ void menu(){
 /*Funcion Cliente con informacion del Cliente*/
 
 void cliente(){
-    int i;
-    infoCliente CLI[10];
-    for (i=0;i<10;i++){
-        printf("Ingrese su apellido y nombre:");
-        fgets(CLI[i].apellidoYNombre,30,stdin);
-        printf("Ingrese su sexo(F/M):");
-        fgets(CLI[i].sexo,1,stdin);
-        printf("Ingrese su DNI(sin puntos):");
-        scanf("%i",&CLI[i].dni);
-        printf("Ingrese su Telefono:");
-        scanf("%i",&CLI[i].telefono);
-        printf("Ingrese su email:");
-        fgets(CLI[i].email,30,stdin);
-        fflush(stdin);//Limpia la pantalla con los datos ingresados para que en el nuevo ciclo for no sea visible
-    }
-    system("pause");
-    system("cls");
-    for (i=0;i<10;i++){
-        printf("El titular, %s, de la cuenta nro. %i posee un saldo dispobible de : %f", CLI[i].apellidoYNombre);
-    }
-    system("pause");
+
+    //Registrar un nuevo cliente
+    struct cliente nuevo_cliente;
+    printf("\nIngrese el Nombre del cliente:\t");
+    scanf("%s",nuevo_cliente.nombre);
+    printf("\nIngrese el Apellido del cliente:\t");
+    scanf("%s",nuevo_cliente.apellido);
+    printf("\nIngrese el sexo (M o F):\t");
+    scanf("%c",&nuevo_cliente.sexo);
+    printf("\nIngrese el DNI del cliente:\t");
+    scanf("%d",&nuevo_cliente.dni);
+    printf("\nIngrese la direccion del cliente:\t");
+    scanf("%s",nuevo_cliente.direccion);
+    printf("\nIngrese el telefono del cliente:\t");
+    scanf("%s",nuevo_cliente.telefono);
+    printf("\nIngrese el Email del cliente:\t");
+    scanf("%s",nuevo_cliente.email);
+
+    //Agregar el nuevo cliente a la lista
+    clientes[num_clientes] = nuevo_cliente;
+    num_clientes++;
+
+    printf("El cliente ha sido registrado con exito\n");
+
+
 }
