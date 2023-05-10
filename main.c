@@ -67,6 +67,7 @@ int main()
         default:
             printf("\n");
             printf("\t\t\tVuelva a intentarlo e ingrese una opcion correcta.\n");
+            break;
         }
     }
 }
@@ -101,8 +102,7 @@ int buscarCliente(clienteInfo clientes[], int num_clientes, clienteInfo cliente_
                clientes[i].sexo == cliente_buscado.sexo && clientes[i].dni == cliente_buscado.dni &&
                strcmp(clientes[i].direccion, cliente_buscado.direccion) == 0 &&
                strcmp(clientes[i].telefono, cliente_buscado.telefono) == 0 &&
-               strcmp(clientes[i].email, cliente_buscado.email) == 0)
-           )
+               strcmp(clientes[i].email, cliente_buscado.email) == 0);
             return i;
     }
     return -1;
@@ -114,6 +114,7 @@ void registrarCliente(clienteInfo clientes[], int *num_clientes){
     //Verificamos si se ha alcanzado el numero maximo de clientes
     if (*num_clientes == MAX_CLIENTES){
         printf("No se pueden agregar mas clientes\n");
+        return;
     }
 
     //Registrar un nuevo cliente
@@ -133,20 +134,16 @@ void registrarCliente(clienteInfo clientes[], int *num_clientes){
     printf("\nIngrese el Email del cliente:");
     scanf("%s",nuevo_cliente.email);
 
-    printf("ANTES DE LA FUNCION");
-
     //Verificamos si el cliente ya existe
     int posicion = buscarCliente(clientes, *num_clientes, nuevo_cliente);
     if (posicion != -1){
-        printf("El cliente ya esta registrado\n");
+        printf("\n\t\t\t\tEl cliente ya esta registrado\n\n");
+        return;
     }
-    printf("DESPUES DE LA FUNCION");
     //Agregar el nuevo cliente a la lista
     clientes[*num_clientes] = nuevo_cliente;
     (*num_clientes)++;
-    printf("\n");
-    printf("\t\t\t\tEl cliente ha sido registrado con exito!!!\n");
+    printf("\n\t\t\t\tEl cliente ha sido registrado con exito!!!\n\n");
 
 }
-
 
