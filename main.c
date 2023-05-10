@@ -6,6 +6,8 @@
 /*Prototipo de las Funciones*/
 
 void menu();
+void registrarCliente();
+int buscarCliente();
 
 /* Estructura de Datos del Cliente*/
 
@@ -35,7 +37,7 @@ int main()
     clienteInfo clientes[MAX_CLIENTES]; //Array para almacenar las cuentas de los clientes
     int num_clientes = 0; //numero actual de clientes
 
-    while 1{
+    while(1){
         menu();
 
         // Leer la opcion seleccionada por el usuario Menu
@@ -59,10 +61,11 @@ int main()
         case 6:
             break;
         case 7:
+            printf("\nSaliendo del programa...\n");
             return 0;
         default:
             printf("\n");
-            printf("\t\t\tVuelva a intentarlo e ingrese una opcion correcta.");
+            printf("\t\t\tVuelva a intentarlo e ingrese una opcion correcta.\n");
         }
     }
 }
@@ -93,7 +96,6 @@ void registrarCliente(clienteInfo clientes[], int *num_clientes ){
     //Verificamos si se ha alcanzado el numero maximo de clientes
     if (*num_clientes == MAX_CLIENTES){
         printf("No se pueden agregar mas clientes\n");
-        return;
     }
 
     //Registrar un nuevo cliente
@@ -103,9 +105,9 @@ void registrarCliente(clienteInfo clientes[], int *num_clientes ){
     printf("\nIngrese el Apellido del cliente:");
     scanf("%s",nuevo_cliente.apellido);
     printf("\nIngrese el sexo (M o F):");
-    scanf("%c",&nuevo_cliente.sexo);
+    scanf(" %c",&nuevo_cliente.sexo);
     printf("\nIngrese el DNI del cliente (sin puntos):");
-    scanf("%d",&nuevo_cliente.dni);
+    scanf(" %d",&nuevo_cliente.dni);
     printf("\nIngrese la direccion del cliente:");
     scanf("%s",nuevo_cliente.direccion);
     printf("\nIngrese telefono del cliente:");
@@ -117,7 +119,6 @@ void registrarCliente(clienteInfo clientes[], int *num_clientes ){
     int posicion = buscarCliente(clientes, *num_clientes, nuevo_cliente);
     if (posicion != -1){
         printf("El cliente ya esta registrado\n");
-        return;
     }
 
     //Agregar el nuevo cliente a la lista
