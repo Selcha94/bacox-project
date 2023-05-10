@@ -13,8 +13,8 @@ typedef struct
 {
     char nombre[20];
     char apellido[20];
-    char sexo[1];
-    double dni[8];
+    char sexo;
+    double dni;
     char direccion[50];
     char telefono[15];
     char email[30];
@@ -35,34 +35,36 @@ int main()
     clienteInfo clientes[MAX_CLIENTES]; //Array para almacenar las cuentas de los clientes
     int num_clientes = 0; //numero actual de clientes
 
-    menu();
-    // Leer la opcion seleccionada por el usuario Menu
-    int opcion;
-    printf("\nIngrese una opcion: ");
-    scanf("%i",&opcion);
+    while 1{
+        menu();
 
-    switch(opcion)
+        // Leer la opcion seleccionada por el usuario Menu
+        int opcion;
+        printf("\nIngrese una opcion: ");
+        scanf("%i",&opcion);
+
+        switch(opcion)
     {
-    case 1:
-        registrarCliente();
-        break;
-    case 2:
-        break;
-    case 3:
-        break;
-    case 4:
-        break;
-    case 5:
-        break;
-    case 6:
-        break;
-    case 7:
-        break;
-    default:
-        printf("Vuelva a intentarlo e ingrese una opcion correcta.");
-
+        case 1:
+            registrarCliente();
+            break;
+        case 2:
+            break;
+        case 3:
+            break;
+        case 4:
+            break;
+        case 5:
+            break;
+        case 6:
+            break;
+        case 7:
+            return 0;
+        default:
+            printf("\n");
+            printf("\t\t\tVuelva a intentarlo e ingrese una opcion correcta.");
+        }
     }
-    return 0;
 }
 
 /*Funciones*/
