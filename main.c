@@ -1,7 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h> // Posee varias funciones que son útiles para probar y mapear caracteres.
 
 #define MAX_CLIENTES 10 //Numero maximo de clientes que se pueden almacenar
+
+//Variables globales para la solicitud de la fecha
+int dia, mes, anio;
 
 /* Estructura de Datos del Cliente*/
 
@@ -20,6 +24,7 @@ typedef struct
 
 typedef struct{
     int numero_cuenta;
+    char cliente_titular;
     float saldo;
 }cuenta;
 
@@ -29,7 +34,9 @@ typedef struct{
 void menu();
 void registrarCliente(clienteInfo clientes[], int *num_clientes);
 int buscarCliente(clienteInfo clientes[],int num_clientes, clienteInfo cliente_buscado);
-
+void convertirMayusculaMinuscula(char* cadena);
+void convertirEmailMinuscula(char *cadena);
+void solicitudFecha( int *dia, int *mes, int *anio);
 
 /*Funcion principal Main*/
 
@@ -38,10 +45,14 @@ int main()
     clienteInfo clientes[MAX_CLIENTES]; //Array para almacenar las cuentas de los clientes
     int num_clientes = 0; //numero actual de clientes
 
+  // Solicitud de ingreso de fecha
+    solicitudFecha( &dia, &mes, &anio);
+
     while(1){
         menu();
 
         // Leer la opcion seleccionada por el usuario Menu
+
         int opcion;
         printf("\nIngrese una opcion: ");
         scanf("%i",&opcion);
@@ -77,7 +88,9 @@ int main()
 /*Funcion Menu*/
 
 void menu(){
+
     //Mostrar Menu de opciones
+
     printf("========================================================================================\n");
     printf("\t\t                       Bienvenido a Bacox!\n");
     printf("========================================================================================\n");
@@ -92,7 +105,49 @@ void menu(){
 
 }
 
+// Funcion para solicitar fecha
+
+void solicitudFecha( int *dia, int *mes, int *anio){
+
+    printf("\n Ingrese la fecha correspondiente (en formato dd/mm/aaaa): ");
+    scanf("%d/%d/%d", &dia, &mes, &anio);
+    printf("========================================================================================\n");
+    printf("\n");
+    printf("\t\t\t\t La fecha ingresada es: %02d/%02d/%d \n\n ", dia, mes, anio);
+
+}
+
+/*Funcion que recibe como parametro una cadena de caracteres
+y convierte la primera letra en mayuscula y el resto en minuscula, pero verifica primero si se cumple si la
+primera letra esta en mayuscula y si lo que le sigue esta en minuscula*/
+
+void convertirMayusculaMinuscula(char* cadena){
+    int i = 0;
+    if(cadena[i]>='a' && cadena[i]<='z'){
+        cadena[i] -='a' - 'A'; //convierte la primera letra en mayuscula
+    }
+
+    i++;
+
+    while(cadena[i] != '\0'){
+        if(cadena[i] >= 'A' && cadena [i] <= 'Z'){
+            cadena[i] += 'a' - 'A'; //convierte la letra a minuscula
+        }
+        i++;
+    }
+}
+
+//Convertir email a minuscula
+
+void convertirEmailMinuscula(char *cadena){
+    int i;
+    for (i=0; cadena[i]; i++){
+        cadena[i] = tolower(cadena[i]);
+    }
+}
+
 //Funcion para buscar clientes en el arreglo de clientes
+
 int buscarCliente(clienteInfo clientes[], int num_clientes, clienteInfo cliente_buscado){
 
     int i;
@@ -112,29 +167,36 @@ int buscarCliente(clienteInfo clientes[], int num_clientes, clienteInfo cliente_
 
 void registrarCliente(clienteInfo clientes[], int *num_clientes){
     //Verificamos si se ha alcanzado el numero maximo de clientes
+
     if (*num_clientes == MAX_CLIENTES){
         printf("No se pueden agregar mas clientes\n");
         return;
     }
 
     //Registrar un nuevo cliente
+
     clienteInfo nuevo_cliente;
     printf("\nIngrese el Nombre del cliente:");
     scanf("%s",nuevo_cliente.nombre);
+    convertirMayusculaMinuscula(nuevo_cliente.nombre); //Verifica si la primera letra esta en mayuscula y sino lo esta la convertieen mayuscula
     printf("\nIngrese el Apellido del cliente:");
     scanf("%s",nuevo_cliente.apellido);
+    convertirMayusculaMinuscula(nuevo_cliente.apellido);
     printf("\nIngrese el sexo (M o F):");
     scanf(" %c",&nuevo_cliente.sexo);
     printf("\nIngrese el DNI del cliente (sin puntos):");
     scanf(" %d",&nuevo_cliente.dni);
     printf("\nIngrese la direccion del cliente:");
     scanf("%s",nuevo_cliente.direccion);
+    convertirMayusculaMinuscula(nuevo_cliente.direccion);
     printf("\nIngrese telefono del cliente:");
     scanf("%s",nuevo_cliente.telefono);
     printf("\nIngrese el Email del cliente:");
     scanf("%s",nuevo_cliente.email);
+    convertirEmailMinuscula(nuevo_cliente.email); //Verifica si el correo esta escrito en minuscula o mayuscula y hace la conversion a minuscula si esta en mayuscula
 
     //Verificamos si el cliente ya existe
+
     int posicion = buscarCliente(clientes, *num_clientes, nuevo_cliente);
     if (posicion != -1){
         printf("\n\t\t\t\tEl cliente ya esta registrado\n\n");
@@ -143,7 +205,13 @@ void registrarCliente(clienteInfo clientes[], int *num_clientes){
     //Agregar el nuevo cliente a la lista
     clientes[*num_clientes] = nuevo_cliente;
     (*num_clientes)++;
+
+    printf("%s\n",nuevo_cliente.nombre);
+    printf("%s\n",nuevo_cliente.apellido);
+    printf("%s\n",nuevo_cliente.direccion);
+
     printf("\n\t\t\t\tEl cliente ha sido registrado con exito!!!\n\n");
+
 
 }
 
