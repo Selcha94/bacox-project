@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <ctype.h> // Posee varias funciones que son útiles para probar y mapear caracteres.
 
 #define MAX_CLIENTES 10 //Numero maximo de clientes que se pueden almacenar
+#define CLIENTE_FILE "cliente.txt" //Constante para el nombre del archivo en el que se guardaran los clientes.
 
 //Variables globales para la solicitud de la fecha
 int dia, mes, anio;
@@ -37,6 +39,8 @@ int buscarCliente(clienteInfo clientes[],int num_clientes, clienteInfo cliente_b
 void convertirMayusculaMinuscula(char* cadena);
 void convertirEmailMinuscula(char *cadena);
 void solicitudFecha( int *dia, int *mes, int *anio);
+void guardarClientesEnArchivo(clienteInfo cliente);
+void mostrarCliente();
 
 /*Funcion principal Main*/
 
@@ -65,6 +69,7 @@ int main()
         case 2:
             break;
         case 3:
+            mostrarCliente();
             break;
         case 4:
             break;
@@ -110,10 +115,10 @@ void menu(){
 void solicitudFecha( int *dia, int *mes, int *anio){
 
     printf("\n Ingrese la fecha correspondiente (en formato dd/mm/aaaa): ");
-    scanf("%d/%d/%d", &dia, &mes, &anio);
+    scanf("%d/%d/%d", dia, mes, anio);
     printf("========================================================================================\n");
     printf("\n");
-    printf("\t\t\t\t La fecha ingresada es: %02d/%02d/%d \n\n ", dia, mes, anio);
+    printf("\t\t\t\t La fecha ingresada es: %02d/%02d/%d \n\n ", *dia, *mes, *anio);
 
 }
 
@@ -153,12 +158,13 @@ int buscarCliente(clienteInfo clientes[], int num_clientes, clienteInfo cliente_
     int i;
     for (i=0; i < num_clientes;i++){
         if (strcmp(clientes[i].nombre, cliente_buscado.nombre) == 0 &&
-               strcmp(clientes[i].apellido, cliente_buscado.apellido) == 0 &&
-               clientes[i].sexo == cliente_buscado.sexo && clientes[i].dni == cliente_buscado.dni &&
-               strcmp(clientes[i].direccion, cliente_buscado.direccion) == 0 &&
-               strcmp(clientes[i].telefono, cliente_buscado.telefono) == 0 &&
-               strcmp(clientes[i].email, cliente_buscado.email) == 0);
+        strcmp(clientes[i].apellido, cliente_buscado.apellido) == 0 &&
+        clientes[i].sexo == cliente_buscado.sexo && clientes[i].dni == cliente_buscado.dni &&
+        strcmp(clientes[i].direccion, cliente_buscado.direccion) == 0 &&
+        strcmp(clientes[i].telefono, cliente_buscado.telefono) == 0 &&
+        strcmp(clientes[i].email, cliente_buscado.email) == 0){
             return i;
+        }
     }
     return -1;
 }
@@ -185,9 +191,9 @@ void registrarCliente(clienteInfo clientes[], int *num_clientes){
     printf("\nIngrese el sexo (M o F):");
     scanf(" %c",&nuevo_cliente.sexo);
     printf("\nIngrese el DNI del cliente (sin puntos):");
-    scanf(" %d",&nuevo_cliente.dni);
+    scanf(" %lf",&nuevo_cliente.dni);
     printf("\nIngrese la direccion del cliente:");
-    scanf("%s",nuevo_cliente.direccion);
+    scanf("%s", nuevo_cliente.direccion);
     convertirMayusculaMinuscula(nuevo_cliente.direccion);
     printf("\nIngrese telefono del cliente:");
     scanf("%s",nuevo_cliente.telefono);
@@ -206,12 +212,44 @@ void registrarCliente(clienteInfo clientes[], int *num_clientes){
     clientes[*num_clientes] = nuevo_cliente;
     (*num_clientes)++;
 
-    printf("%s\n",nuevo_cliente.nombre);
-    printf("%s\n",nuevo_cliente.apellido);
-    printf("%s\n",nuevo_cliente.direccion);
-
+    guardarClientesEnArchivo(nuevo_cliente);// Llama a la función para guardar el cliente en el archivo
     printf("\n\t\t\t\tEl cliente ha sido registrado con exito!!!\n\n");
 
 
+}
+
+//Funcion para guardar clientes dentro un archivo, esta funcion recibira como parametros al cliente  a guardar y el nombre del archivo.
+void guardarClientesEnArchivo(clienteInfo cliente){
+
+    FILE *archivo = fopen(CLIENTE_FILE,"a"); //Con "a" abre y crea un nuevo fichero
+    if (archivo == NULL){
+        printf("Ha ocurrido un error al intentar abrir el archivo.\n");
+        return;
+    }
+    fprintf(archivo, "%s;%s;%c;%lf;%s;%s;%s\n",cliente.nombre, cliente.apellido, cliente.sexo, cliente.dni, cliente.direccion, cliente.telefono, cliente.email);
+
+    fclose(archivo);
+}
+
+//Funcion para leer y mostrar los clientes almacenados en el archivo.
+void mostrarCliente() {
+    FILE *archivo = fopen(CLIENTE_FILE,"r");
+    if (archivo == NULL) {
+        printf("Ha ocurrido un error al intentar abrir el archivo.\n");
+        return;
+    }
+
+    clienteInfo cliente;
+     while (fscanf(archivo, "%[^;];%[^;];%c;%lf;%[^;];%[^;];%[^;]\n", cliente.nombre, cliente.apellido, &cliente.sexo, &cliente.dni, cliente.direccion, cliente.telefono, cliente.email) != EOF) {
+        printf("Nombre: %s\n", cliente.nombre);
+        printf("Apellido: %s\n", cliente.apellido);
+        printf("Sexo: %c\n", cliente.sexo);
+        printf("DNI: %.lf\n", cliente.dni);
+        printf("Dirección: %s\n", cliente.direccion);
+        printf("Telefono: %s\n", cliente.telefono);
+        printf("Email: %s\n", cliente.email);
+        printf("----------------------------\n");
+    }
+    fclose(archivo);
 }
 
