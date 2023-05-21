@@ -42,6 +42,37 @@ void solicitudFecha( int *dia, int *mes, int *anio);
 void guardarClientesEnArchivo(clienteInfo cliente);
 void mostrarCliente();
 
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//Lista de pendientes
+// 1)Dar de alta una cuenta
+//  - Al dar de alta una cuenta, el cliente se tiene que guardar solamente si no existe en el archivo clientes.txt (OK)
+//  - Ni bien se crea la cuenta, tiene que pedir un deposito mayor a cero (Falta)
+//  - Aparte de guardar el cliente en clientes.txt, tambien hay que guardar la cuenta en cuentas.txt. Cada cuenta tendra:
+//    - Numero (Lo calculamos al momento de crear la cuenta, por ejemplo tomamos el numero de la cuenta anterior + 1)
+//    - Dni del titular
+//    - Saldo
+//  - Otra cosa que hay que guardar tambien es cada movimiento en un archivo movimientos.txt. Cada movimiento tendra:
+//    - Numero de cuenta
+//    - Monto
+//    - Tipo de movimiento (E o D, dependiendo de si es extraccion o deposito)
+// 2) Eliminar una cuenta
+//  - Al eliminar una cuenta, hay que validar primero que su saldo sea cero. Caso contrario no dejar eliminarla (Falta)
+//  - Al eliminar una cuenta, eliminar tambien al titular si es que no tiene ninguna otra cuenta aparte de la que se esta eliminando (Falta)
+// 3) Listado de cuentas con saldo entre minimo y maximo
+//  - Listar cuentas que tengan saldo entre un saldo minimo y maximo especificado por el usuario (Falta)
+// 4) Realizar una extraccion
+//  - Hacer una extraccion, validar que haya saldo suficiente primero (Falta)
+// 5) Depositar dinero
+//  - Depositar dinero en una cuenta
+// 6) Generar un archivo de texto de movimientos para una fecha ingresada por el usuario
+//  - Exportar en un archivo .txt todos los movimientos realizados en una cuenta para una determinada fecha que el usuario especifique por parametro (Falta)
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /*Funcion principal Main*/
 
 int main()
