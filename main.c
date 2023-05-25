@@ -1,47 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h> // Posee varias funciones que son útiles para probar y mapear caracteres.
-
-#define MAX_CLIENTES 10 //Numero maximo de clientes que se pueden almacenar
-#define CLIENTE_FILE "cliente.txt" //Constante para el nombre del archivo en el que se guardaran los clientes.
-
-//Variables globales para la solicitud de la fecha
-int dia, mes, anio;
-
-/* Estructura de Datos del Cliente*/
-
-typedef struct
-{
-    char nombre[20];
-    char apellido[20];
-    char sexo;
-    double dni;
-    char direccion[30];
-    char telefono[15];
-    char email[50];
-}clienteInfo;
-
-/* Estructura de Datos del Cuenta*/
-
-typedef struct{
-    int numero_cuenta;
-    char cliente_titular;
-    float saldo;
-}cuenta;
-
-
-/*Prototipo de las Funciones*/
-
-void menu();
-void registrarCliente(clienteInfo clientes[], int *num_clientes);
-int buscarCliente(clienteInfo clientes[],int num_clientes, clienteInfo cliente_buscado);
-void convertirMayusculaMinuscula(char* cadena);
-void convertirEmailMinuscula(char *cadena);
-void solicitudFecha( int *dia, int *mes, int *anio);
-void guardarClientesEnArchivo(clienteInfo cliente);
-void mostrarCliente();
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -72,6 +28,51 @@ void mostrarCliente();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h> // Posee varias funciones que son útiles para probar y mapear caracteres.
+
+#define MAX_CLIENTES 10 //Numero maximo de clientes que se pueden almacenar
+#define CLIENTE_FILE "cliente.txt" //Constante para el nombre del archivo en el que se guardaran los clientes.
+
+//Variables globales para la solicitud de la fecha
+int dia, mes, anio;
+static int numero_cuenta = 0000; //Variable estatica que almacena el numero de cuenta y asigna un valor inicial de 0000
+
+/* Estructura de Datos del Cliente*/
+
+typedef struct
+{
+    char nombre[20];
+    char apellido[20];
+    char sexo;
+    double dni;
+    char direccion[30];
+    char telefono[15];
+    char email[50];
+    cuenta cuenta_cliente; // Agregar el miembro cuenta_cliente de tipo cuenta
+}clienteInfo;
+
+/* Estructura de Datos del Cuenta*/
+
+typedef struct{
+    int cuenta_cliente;
+    float saldo;
+}cuenta;
+
+
+/*Prototipo de las Funciones*/
+
+void menu();
+void solicitarDeposito(clienteInfo *cliente);
+void registrarCliente(clienteInfo clientes[], int *num_clientes);
+int buscarCliente(clienteInfo clientes[],int num_clientes, clienteInfo cliente_buscado);
+void convertirMayusculaMinuscula(char* cadena);
+void convertirEmailMinuscula(char *cadena);
+void solicitudFecha( int *dia, int *mes, int *anio);
+void guardarClientesEnArchivo(clienteInfo cliente);
+void mostrarCliente();
 
 /*Funcion principal Main*/
 
@@ -200,6 +201,19 @@ int buscarCliente(clienteInfo clientes[], int num_clientes, clienteInfo cliente_
     return -1;
 }
 
+/*Funcion para realizar Depositos de dinero.*/
+//En esta funcion, se pasa un puntero al cliente para poder modificar directamente la cuenta del cliente
+
+void solicitarDeposito(clienteInfo *cliente){
+    cliente->cuenta_cliente.cuenta_cliente = numero_cuenta;
+    numero_cuenta++; //Incrementa el numero de cuenta para el siguiente cliente
+    printf("\n Ingrese el monto del deposito realizado por el cliente: \t");
+    scanf("%f", &cliente->cuenta_cliente.saldo);
+
+    guardarClientesEnArchivo(*cliente);
+
+}
+
 /*Funcion Cliente con informacion del Cliente*/
 
 void registrarCliente(clienteInfo clientes[], int *num_clientes){
@@ -214,23 +228,29 @@ void registrarCliente(clienteInfo clientes[], int *num_clientes){
 
     clienteInfo nuevo_cliente;
     printf("\nIngrese el Nombre del cliente:");
-    scanf("%s",nuevo_cliente.nombre);
+    fgets(nuevo_cliente.nombre, sizeof(nuevo_cliente.nombre),stdin);
+    nuevo_cliente.nombre[strcspn(nuevo_cliente.nombre, "\n")] = '\0';//Elimina el caracter del '\n' despues de leerlo
     convertirMayusculaMinuscula(nuevo_cliente.nombre); //Verifica si la primera letra esta en mayuscula y sino lo esta la convertieen mayuscula
     printf("\nIngrese el Apellido del cliente:");
-    scanf("%s",nuevo_cliente.apellido);
+    fgets(nuevo_cliente.apellido, sizeof(nuevo_cliente.apellido),stdin);
+    nuevo_cliente.apellido[strcspn(nuevo_cliente.apellido, "\n")] = '\0';
     convertirMayusculaMinuscula(nuevo_cliente.apellido);
     printf("\nIngrese el sexo (M o F):");
     scanf(" %c",&nuevo_cliente.sexo);
     printf("\nIngrese el DNI del cliente (sin puntos):");
-    scanf(" %lf",&nuevo_cliente.dni);
+    scanf(" %d",&nuevo_cliente.dni);
     printf("\nIngrese la direccion del cliente:");
-    scanf("%s", nuevo_cliente.direccion);
+    fgets(nuevo_cliente.direccion, sizeof(nuevo_cliente.direccion),stdin);
+    nuevo_cliente.direccion[strcspn(nuevo_cliente.apellido,"\n")]='\0';
     convertirMayusculaMinuscula(nuevo_cliente.direccion);
     printf("\nIngrese telefono del cliente:");
     scanf("%s",nuevo_cliente.telefono);
     printf("\nIngrese el Email del cliente:");
     scanf("%s",nuevo_cliente.email);
     convertirEmailMinuscula(nuevo_cliente.email); //Verifica si el correo esta escrito en minuscula o mayuscula y hace la conversion a minuscula si esta en mayuscula
+
+    // Llamada a la funcion para asignar un numero de cliente
+    solicitarDeposito(&nuevo_cliente);
 
     //Verificamos si el cliente ya existe
 
@@ -257,7 +277,7 @@ void guardarClientesEnArchivo(clienteInfo cliente){
         printf("Ha ocurrido un error al intentar abrir el archivo.\n");
         return;
     }
-    fprintf(archivo, "%s;%s;%c;%lf;%s;%s;%s\n",cliente.nombre, cliente.apellido, cliente.sexo, cliente.dni, cliente.direccion, cliente.telefono, cliente.email);
+    fprintf(archivo, "Nombre:%s;Apellido:%s;Sexo:%c;DNI:%lf;Direccion:%s;Telefono:%s;Email:%s;NumeroCuenta:%d;Saldo:%.2f\n",cliente.nombre, cliente.apellido, cliente.sexo, cliente.dni, cliente.direccion, cliente.telefono, cliente.email, cliente.cuenta_cliente.numero_cuenta, cliente.cuenta_cliente.saldo);
 
     fclose(archivo);
 }
@@ -271,16 +291,20 @@ void mostrarCliente() {
     }
 
     clienteInfo cliente;
-     while (fscanf(archivo, "%[^;];%[^;];%c;%lf;%[^;];%[^;];%[^;]\n", cliente.nombre, cliente.apellido, &cliente.sexo, &cliente.dni, cliente.direccion, cliente.telefono, cliente.email) != EOF) {
+     while (fscanf(archivo, "%s;%s;%c;%lf;%s;%[^;];%[^;];%d;%lf\n", cliente.nombre, cliente.apellido, &cliente.sexo, &cliente.dni, cliente.direccion, cliente.telefono, cliente.email,&cliente.cuenta_cliente.numero_cuenta, &cliente.cuenta_cliente.saldo) != EOF) {
         printf("Nombre: %s\n", cliente.nombre);
         printf("Apellido: %s\n", cliente.apellido);
         printf("Sexo: %c\n", cliente.sexo);
-        printf("DNI: %.lf\n", cliente.dni);
+        printf("DNI: %.0lf\n", cliente.dni);
         printf("Dirección: %s\n", cliente.direccion);
         printf("Telefono: %s\n", cliente.telefono);
         printf("Email: %s\n", cliente.email);
+        printf("Numero de cuenta: %d\n", cliente.cuenta_cliente.numero_cuenta);
+        printf("Saldo: %.2f\n", cliente.cuenta_cliente.saldo);
         printf("----------------------------\n");
     }
     fclose(archivo);
 }
+
+
 
