@@ -1,7 +1,3 @@
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 //Lista de pendientes
 // 1)Dar de alta una cuenta
 //  - Al dar de alta una cuenta, el cliente se tiene que guardar solamente si no existe en el archivo clientes.txt (OK)
@@ -26,8 +22,10 @@
 // 6) Generar un archivo de texto de movimientos para una fecha ingresada por el usuario
 //  - Exportar en un archivo .txt todos los movimientos realizados en una cuenta para una determinada fecha que el usuario especifique por parametro (Falta)
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////      ZONA DE IMPORTS         ////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,6 +33,7 @@
 
 #define MAX_CLIENTES 10 //Numero maximo de clientes que se pueden almacenar
 #define CLIENTE_FILE "cliente.txt" //Constante para el nombre del archivo en el que se guardaran los clientes.
+#define CUENTAS_FILE "cuentas.txt" //Constante para el nombre del archivo en el que se guardaran las cuentas.
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////      VARIABLES GLOBALES      ////////////////////////////////////////////////////////
@@ -43,7 +42,7 @@
 //Variables globales para la solicitud de la fecha
 static int dia, mes, anio;
 //Variable estatica que almacena el numero de cuenta y asigna un valor inicial de 0000
-static int numero_cuenta = 0000;
+static int numero_cuenta = 0001;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////      ZONA DE STRUCTS         ////////////////////////////////////////////////////////
@@ -53,7 +52,7 @@ static int numero_cuenta = 0000;
 /* Estructura de Datos del Cliente*/
 typedef struct{
     int cuenta_cliente;
-    int nro_cliente;
+    int dni_cliente;
     float saldo;
 }cuenta;
 
@@ -64,11 +63,10 @@ typedef struct
     char nombre[20];
     char apellido[20];
     char sexo;
-    double dni;
+    int dni;
     char direccion[30];
-    char telefono[15];
+    int telefono;
     char email[50];
-    cuenta cuenta_cliente; // Agregar el miembro cuenta_cliente de tipo cuenta
 }clienteInfo;
 
 
@@ -78,7 +76,7 @@ typedef struct
 
 /*Prototipo de las Funciones*/
 void menu();
-void solicitarDeposito(clienteInfo *cliente);
+void solicitarDeposito(cuenta *cuenta);
 void registrarCliente(clienteInfo clientes[], int *num_clientes);
 int buscarCliente(clienteInfo clientes[],int num_clientes, clienteInfo cliente_buscado);
 void convertirMayusculaMinuscula(char* cadena);
@@ -108,7 +106,7 @@ int main()
         int opcion;
         printf("\nIngrese una opcion: ");
         scanf("%i",&opcion);
-        getchar(); //Esto te "absrobe" el enter con el que ingresaste el numero de opcion en la linea de arriba
+        getchar(); //Esto te "absorbe" el enter con el que ingresaste el numero de opcion en la linea de arriba
 
         switch(opcion)
     {
@@ -168,22 +166,6 @@ void solicitudFecha( int *dia, int *mes, int *anio){
     printf("\t\t\t\t La fecha ingresada es: %02d/%02d/%d \n\n ", *dia, *mes, *anio);
 
 }
-// Recibe un string y un largo maximo
-// Devuelve 1 si el largo del string es menor o igual al maximo
-// Devuelve 0 en otro caso
-int validar_largo(char* cadena, int largo_maximo){
-
-    printf("%i",strlen(cadena));
-    printf("%i",largo_maximo);
-    return strlen(cadena) <= largo_maximo;
-}
-
-void limpiar_buffer(){
-    char buffer_char = getchar();
-    while(buffer_char != '\n'){
-        buffer_char = getchar();
-    }
-}
 
 /*Funcion que recibe como parametro una cadena de caracteres
 y convierte la primera letra en mayuscula y el resto en minuscula, pero verifica primero si se cumple si la
@@ -231,13 +213,12 @@ int buscarCliente(clienteInfo clientes[], int num_clientes, clienteInfo cliente_
 
 /*Funcion para realizar Depositos de dinero.*/
 //En esta funcion, se pasa un puntero al cliente para poder modificar directamente la cuenta del cliente
-void solicitarDeposito(clienteInfo *cliente){
-    cliente->cuenta_cliente.cuenta_cliente = numero_cuenta;
-    numero_cuenta++; //Incrementa el numero de cuenta para el siguiente cliente
-    printf("\n Ingrese el monto del deposito realizado por el cliente: \t");
-    scanf("%f", &cliente->cuenta_cliente.saldo);
+void solicitarDeposito(cuenta *cuenta){
 
-    guardarClientesEnArchivo(*cliente);
+    printf("\nIngrese el monto del deposito realizado por el cliente: \t");
+    float monto = 0;
+    scanf("%f", &monto);
+    cuenta->saldo += monto;
 
 }
 
@@ -268,7 +249,7 @@ void registrarCliente(clienteInfo clientes[], int *num_clientes){
     int sexo_valido = 0;
     while (! sexo_valido){
         printf("\nIngrese el sexo (M o F):");
-        scanf(" %c",&nuevo_cliente.sexo);;
+        scanf("%c",&nuevo_cliente.sexo);
         if (nuevo_cliente.sexo != 'M' && nuevo_cliente.sexo != 'F'){
             printf("Sexo invalido, debe ser M o F");
         }
@@ -276,25 +257,37 @@ void registrarCliente(clienteInfo clientes[], int *num_clientes){
             sexo_valido = 1;
         }
     }
+    // getchar(); //De nuevo, "absorbo" el enter del input anterior
 
     printf("\nIngrese el DNI del cliente (sin puntos):");
-    scanf(" %d",&nuevo_cliente.dni);
-
-    printf("\nIngrese la direccion del cliente:");
-    fgets(nuevo_cliente.direccion, sizeof(nuevo_cliente.direccion),stdin);
+    scanf("%i",&nuevo_cliente.dni);
     getchar(); //De nuevo, "absorbo" el enter del input anterior
-    nuevo_cliente.direccion[strcspn(nuevo_cliente.apellido,"\n")]='\0';
+
+    printf("\nIngrese la direccion del cliente (%i caracteres maximo):", sizeof(nuevo_cliente.direccion));
+    fgets(nuevo_cliente.direccion, sizeof(nuevo_cliente.direccion),stdin);
+    nuevo_cliente.direccion[strcspn(nuevo_cliente.direccion,"\n")]='\0';
     convertirMayusculaMinuscula(nuevo_cliente.direccion);
 
     printf("\nIngrese telefono del cliente:");
-    scanf("%s",nuevo_cliente.telefono);
+    scanf("%i",&nuevo_cliente.telefono);
+    getchar(); //De nuevo, "absorbo" el enter del input anterior
 
     printf("\nIngrese el Email del cliente:");
-    scanf("%s",nuevo_cliente.email);
+    fgets(nuevo_cliente.email, sizeof(nuevo_cliente.email),stdin);
+    nuevo_cliente.email[strcspn(nuevo_cliente.email,"\n")]='\0';
     convertirEmailMinuscula(nuevo_cliente.email); //Verifica si el correo esta escrito en minuscula o mayuscula y hace la conversion a minuscula si esta en mayuscula
 
-    // Llamada a la funcion para asignar un numero de cliente
-    solicitarDeposito(&nuevo_cliente);
+    //TODO: Esto podria ser una funcion aparte
+    cuenta nueva_cuenta;
+    nueva_cuenta.cuenta_cliente = numero_cuenta;
+    numero_cuenta++; //Incrementa el numero de cuenta para el siguiente cliente
+    nueva_cuenta.dni_cliente = nuevo_cliente.dni;
+    nueva_cuenta.saldo = 0;
+    //////////////////////////////////////////
+
+    solicitarDeposito(&nueva_cuenta);
+
+    guardarCuentasEnArchivo(nueva_cuenta);
 
     //Verificamos si el cliente ya existe
 
@@ -313,6 +306,24 @@ void registrarCliente(clienteInfo clientes[], int *num_clientes){
 
 }
 
+//Funcion para guardar cuentas dentro un archivo, esta funcion recibira como parametros a la cuenta  a guardar y el nombre del archivo.
+void guardarCuentasEnArchivo(cuenta cuenta_cliente){
+    FILE *archivo = fopen(CUENTAS_FILE,"a"); //Con "a" abre y crea un nuevo fichero
+    if (archivo == NULL){
+        printf("Ha ocurrido un error al intentar abrir el archivo.\n");
+        return;
+    }
+    fprintf(
+            archivo,
+            "%i;%i;%f;\n",
+            cuenta_cliente.cuenta_cliente,
+            cuenta_cliente.dni_cliente,
+            cuenta_cliente.saldo
+    );
+
+    fclose(archivo);
+}
+
 //Funcion para guardar clientes dentro un archivo, esta funcion recibira como parametros al cliente  a guardar y el nombre del archivo.
 void guardarClientesEnArchivo(clienteInfo cliente){
 
@@ -323,16 +334,14 @@ void guardarClientesEnArchivo(clienteInfo cliente){
     }
     fprintf(
             archivo,
-            "%s;%s;%c;%lf;%s;%s;%s;%d;%.2f\n",
+            "%s;%s;%c;%i;%s;%i;%s\n",
             cliente.nombre,
             cliente.apellido,
             cliente.sexo,
             cliente.dni,
             cliente.direccion,
             cliente.telefono,
-            cliente.email,
-            cliente.cuenta_cliente.cuenta_cliente,
-            cliente.cuenta_cliente.saldo
+            cliente.email
     );
 
     fclose(archivo);
@@ -340,27 +349,69 @@ void guardarClientesEnArchivo(clienteInfo cliente){
 
 //Funcion para leer y mostrar los clientes almacenados en el archivo.
 void mostrarCliente() {
-    FILE *archivo = fopen(CLIENTE_FILE,"r");
-    if (archivo == NULL) {
-        printf("Ha ocurrido un error al intentar abrir el archivo.\n");
+    FILE *archivo_clientes = fopen(CLIENTE_FILE,"r");
+    if (archivo_clientes == NULL) {
+        printf("Ha ocurrido un error al intentar abrir el archivo de clientes.\n");
         return;
     }
 
-    clienteInfo cliente;
-     while (fscanf(archivo, "%s;%s;%c;%lf;%s;%[^;];%[^;];%d;%lf\n", cliente.nombre, cliente.apellido, &cliente.sexo, &cliente.dni, cliente.direccion, cliente.telefono, cliente.email,&cliente.cuenta_cliente.cuenta_cliente, &cliente.cuenta_cliente.saldo) != EOF) {
-        printf("Nombre: %s\n", cliente.nombre);
-        printf("Apellido: %s\n", cliente.apellido);
-        printf("Sexo: %c\n", cliente.sexo);
-        printf("DNI: %.0lf\n", cliente.dni);
-        printf("Dirección: %s\n", cliente.direccion);
-        printf("Telefono: %s\n", cliente.telefono);
-        printf("Email: %s\n", cliente.email);
-        printf("Numero de cuenta: %d\n", cliente.cuenta_cliente.cuenta_cliente);
-        printf("Saldo: %.2f\n", cliente.cuenta_cliente.saldo);
-        printf("----------------------------\n");
+    FILE *archivo_cuentas = fopen(CUENTAS_FILE,"r");
+    if (archivo_cuentas == NULL) {
+        printf("Ha ocurrido un error al intentar abrir el archivo de cuentas.\n");
+        return;
     }
-    fclose(archivo);
+
+    char linea_csv_cuentas[100];
+    char linea_csv_clientes[100];
+    
+    char nro_cuenta[30];
+    float saldo;
+    int dni_cliente;
+    char nombre[20];
+    char apellido[20];
+    
+
+    while (fscanf(archivo_clientes, "%s;%s;%c;%i;%s;%i;%s\n", linea_csv_clientes) != EOF) {
+
+        char *token = strtok(linea_csv_clientes, ";");
+        printf("Nombre: %s\n", token);
+        token = strtok(NULL, ";");
+        printf("Apellido: %s\n", token);
+        token = strtok(NULL, ";");
+        printf("Sexo: %s\n", token);
+        token = strtok(NULL, ";");
+        printf("DNI: %i\n", (int)token);
+        token = strtok(NULL, ";");
+        printf("Direccion: %s\n", token);
+        token = strtok(NULL, ";");
+        printf("Telefono: %i\n", (int)token);
+        token = strtok(NULL, ";");
+        printf("Email: %s\n", token);
+
+
+        printf("----------------------------\n");
+
+    }
+    fclose(archivo_clientes);
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////    FUNCIONES DEPRECADAS    //////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// Recibe un string y un largo maximo
+// Devuelve 1 si el largo del string es menor o igual al maximo
+// Devuelve 0 en otro caso
+int validar_largo(char* cadena, int largo_maximo){
 
+    printf("%i",strlen(cadena));
+    printf("%i",largo_maximo);
+    return strlen(cadena) <= largo_maximo;
+}
+
+void limpiar_buffer(){
+    char buffer_char = getchar();
+    while(buffer_char != '\n'){
+        buffer_char = getchar();
+    }
+}
