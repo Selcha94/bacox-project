@@ -32,17 +32,11 @@
 #include <ctype.h> // Posee varias funciones que son útiles para probar y mapear caracteres.
 
 #define MAX_CLIENTES 10 //Numero maximo de clientes que se pueden almacenar
-#define CLIENTE_FILE "cliente.txt" //Constante para el nombre del archivo en el que se guardaran los clientes.
-#define CUENTAS_FILE "cuentas.txt" //Constante para el nombre del archivo en el que se guardaran las cuentas.
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////      VARIABLES GLOBALES      ////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//Variables globales para la solicitud de la fecha
-static int dia, mes, anio;
-//Variable estatica que almacena el numero de cuenta y asigna un valor inicial de 0000
-static int numero_cuenta = 0001;
+#define MAX_CUENTAS 20 //Numero maximo de cuentas que puede tener cada cliente
+#define MAX_MOVIMIENTOS 50//Numero maximo de movimientos
+#define CLIENTE_FILE "clientes.dat" //Constante para el nombre del archivo en el que se guardaran los clientes.
+#define CUENTAS_FILE "cuentas.dat" //Constante para el nombre del archivo en el que se guardaran las cuentas.
+#define MOVIMIENTOS_FILE "movimientos.dat"
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////      ZONA DE STRUCTS         ////////////////////////////////////////////////////////
@@ -53,7 +47,7 @@ static int numero_cuenta = 0001;
 typedef struct{
     int cuenta_cliente;
     int dni_cliente;
-    float saldo;
+    int saldo;
 }cuenta;
 
 
@@ -69,20 +63,53 @@ typedef struct
     char email[50];
 }clienteInfo;
 
+typedef struct
+{
+    int nro_cuenta;
+    float monto;
+    char tipo; //Puede ser E o D
+}movimientoInfo;
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////      VARIABLES GLOBALES      ////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//Variables globales para la solicitud de la fecha
+static int dia, mes, anio;
+
+//Variable estatica que almacena el numero de cuenta y asigna un valor inicial de 0000
+static int numero_cuenta = 0001;
+
+static int numero_clientes = 0;
+
+static int numero_cuentas = 0;
+
+static int numero_movimientos = 0;
+
+clienteInfo clientes[MAX_CLIENTES];
+
+cuenta cuentas[MAX_CUENTAS];
+
+movimientoInfo movimientos[MAX_MOVIMIENTOS];
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////      ZONA DE PROTOTIPOS      ////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /*Prototipo de las Funciones*/
+void cargarDatos(); //Funcion inicial que busca cuentas, clientes y movimientos en disco y los carga en memoria
 void menu();
 void solicitarDeposito(cuenta *cuenta);
-void registrarCliente(clienteInfo clientes[], int *num_clientes);
-int buscarCliente(clienteInfo clientes[],int num_clientes, clienteInfo cliente_buscado);
+void registrarCliente();
+void registrarMovimiento(int nro_cuenta, float monto, char tipo_movimiento);
+int buscarCliente(clienteInfo cliente_buscado);
 void convertirMayusculaMinuscula(char* cadena);
 void convertirEmailMinuscula(char *cadena);
 void solicitudFecha( int *dia, int *mes, int *anio);
 void guardarClientesEnArchivo(clienteInfo cliente);
+void guardarCuentasEnArchivo(cuenta cuentaCliente);
+void guardarMovimientosEnArchivo(movimientoInfo movimiento);
 void mostrarCliente();
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -92,8 +119,8 @@ void mostrarCliente();
 /*Funcion principal Main*/
 int main()
 {
-    clienteInfo clientes[MAX_CLIENTES]; //Array para almacenar las cuentas de los clientes
-    int num_clientes = 0; //Contador de numero actual de clientes
+    //Cargo en memoria los datos que tenga guardados en disco
+    cargarDatos();
 
     // Solicitud de ingreso de fecha
     solicitudFecha( &dia, &mes, &anio);
@@ -111,7 +138,7 @@ int main()
         switch(opcion)
     {
         case 1:
-            registrarCliente(clientes, &num_clientes);
+            registrarCliente();
             break;
         case 2:
             break;
@@ -136,8 +163,66 @@ int main()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////    FUNCIONES AUXILIARES    //////////////////////////////////////////////////////////
+////////////////////////////////////////    FUNCIONES INICIALES     //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//Funcion que carga datos de disco a memoria
+void cargarDatos(){
+
+    FILE *archivo_clientes = fopen(CLIENTE_FILE,"rb");
+    if (archivo_clientes == NULL) {
+        //Si no encuentro el archivo, no pasa nada. Podria ser por ejemplo la primera vez que abre el banco.
+        printf("No se encontro el archivo de clientes\n");
+    }
+
+    for ( int i = 0; i < MAX_CLIENTES; i++){
+        if (fread(&clientes[i], sizeof(clienteInfo),1,archivo_clientes)!=1)
+            break;
+
+        numero_clientes++;
+
+    }
+    if (numero_clientes > 0){
+        printf("Cargado el archivo de clientes\n");
+    }
+    fclose(archivo_clientes);
+
+    FILE *archivo_cuentas = fopen(CUENTAS_FILE,"rb");
+    if (archivo_cuentas == NULL) {
+        //Si no encuentro el archivo, no pasa nada. Podria ser por ejemplo la primera vez que abre el banco.
+        printf("No se encontro el archivo de cuentas\n");
+    }
+
+    for ( int i = 0; i < MAX_CUENTAS; i++){
+        if (fread(&cuentas[i], sizeof(cuenta),1,archivo_cuentas)!=1)
+            break;
+
+        numero_cuentas++;
+    }
+    if (numero_cuentas > 0){
+        printf("Cargado el archivo de cuentas\n");
+    }
+    fclose(archivo_cuentas);
+
+    FILE *archivo_movimientos = fopen(MOVIMIENTOS_FILE,"rb");
+    if (archivo_movimientos == NULL) {
+        //Si no encuentro el archivo, no pasa nada. Podria ser por ejemplo la primera vez que abre el banco.
+        printf("No se encontro el archivo de movimientos\n");
+    }
+
+    for ( int i = 0; i < MAX_MOVIMIENTOS; i++){
+        if (fread(&movimientos[i], sizeof(movimientoInfo),1,archivo_movimientos)!=1)
+            break;
+
+        numero_movimientos++;
+    }
+    if (numero_movimientos > 0){
+        printf("Cargado el archivo de movimientos\n");
+    }
+    fclose(archivo_movimientos);
+
+    return;
+}
 
 //Mostrar Menu de opciones
 void menu(){
@@ -167,6 +252,10 @@ void solicitudFecha( int *dia, int *mes, int *anio){
 
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////        FUNCIONES DE CREACION DE CLIENTES Y CUENTAS    //////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /*Funcion que recibe como parametro una cadena de caracteres
 y convierte la primera letra en mayuscula y el resto en minuscula, pero verifica primero si se cumple si la
 primera letra esta en mayuscula y si lo que le sigue esta en minuscula*/
@@ -195,10 +284,10 @@ void convertirEmailMinuscula(char *cadena){
 }
 
 //Funcion para buscar clientes en el arreglo de clientes
-int buscarCliente(clienteInfo clientes[], int num_clientes, clienteInfo cliente_buscado){
+int buscarCliente(clienteInfo cliente_buscado){
 
     int i;
-    for (i=0; i < num_clientes;i++){
+    for (i=0; i < numero_clientes;i++){
         if (strcmp(clientes[i].nombre, cliente_buscado.nombre) == 0 &&
         strcmp(clientes[i].apellido, cliente_buscado.apellido) == 0 &&
         clientes[i].sexo == cliente_buscado.sexo && clientes[i].dni == cliente_buscado.dni &&
@@ -211,22 +300,51 @@ int buscarCliente(clienteInfo clientes[], int num_clientes, clienteInfo cliente_
     return -1;
 }
 
+void guardarMovimientosEnArchivo(movimientoInfo movimiento){
+    FILE *archivo = fopen(MOVIMIENTOS_FILE,"ab"); //Con "a" abre y crea un nuevo fichero
+    if (archivo == NULL){
+        printf("Ha ocurrido un error al intentar abrir el archivo.\n");
+        return;
+    }
+    fwrite(&movimiento.nro_cuenta , sizeof(&movimiento.nro_cuenta), 1, archivo);
+    fwrite(&movimiento.monto, sizeof(&movimiento.monto), 1, archivo);
+    fwrite(&movimiento.tipo, sizeof(&movimiento.tipo), 1, archivo);
+
+    fclose(archivo);
+}
+
+void registrarMovimiento(int nro_cuenta, float monto, char tipo_movimiento){
+    movimientoInfo nuevo_movimiento;
+
+    nuevo_movimiento.nro_cuenta = nro_cuenta;
+    nuevo_movimiento.monto = monto;
+    nuevo_movimiento.tipo = tipo_movimiento;
+
+    movimientos[numero_movimientos] = nuevo_movimiento;
+    numero_movimientos++;
+
+    guardarMovimientosEnArchivo(nuevo_movimiento);
+
+}
+
 /*Funcion para realizar Depositos de dinero.*/
 //En esta funcion, se pasa un puntero al cliente para poder modificar directamente la cuenta del cliente
 void solicitarDeposito(cuenta *cuenta){
 
-    printf("\nIngrese el monto del deposito realizado por el cliente: \t");
-    float monto = 0;
-    scanf("%f", &monto);
+    printf("\nIngrese el monto del deposito realizado por el cliente:");
+    int monto = 0;
+    scanf("%i", &monto);
     cuenta->saldo += monto;
+
+    registrarMovimiento(cuenta->cuenta_cliente, monto, "D");
 
 }
 
 /*Funcion Cliente con informacion del Cliente*/
-void registrarCliente(clienteInfo clientes[], int *num_clientes){
+void registrarCliente(){
     //Verificamos si se ha alcanzado el numero maximo de clientes
 
-    if (*num_clientes == MAX_CLIENTES){
+    if (numero_clientes == MAX_CLIENTES){
         printf("No se pueden agregar mas clientes\n");
         return;
     }
@@ -257,7 +375,7 @@ void registrarCliente(clienteInfo clientes[], int *num_clientes){
             sexo_valido = 1;
         }
     }
-    // getchar(); //De nuevo, "absorbo" el enter del input anterior
+    getchar(); //De nuevo, "absorbo" el enter del input anterior
 
     printf("\nIngrese el DNI del cliente (sin puntos):");
     scanf("%i",&nuevo_cliente.dni);
@@ -277,49 +395,54 @@ void registrarCliente(clienteInfo clientes[], int *num_clientes){
     nuevo_cliente.email[strcspn(nuevo_cliente.email,"\n")]='\0';
     convertirEmailMinuscula(nuevo_cliente.email); //Verifica si el correo esta escrito en minuscula o mayuscula y hace la conversion a minuscula si esta en mayuscula
 
-    //TODO: Esto podria ser una funcion aparte
+    //Verificamos si el cliente ya existe
+    int posicion = buscarCliente(nuevo_cliente);
+    if (posicion == -1){
+        //Agregar el nuevo cliente a la lista
+        clientes[numero_clientes] = nuevo_cliente;
+        numero_clientes++;
+
+        guardarClientesEnArchivo(nuevo_cliente);// Llama a la función para guardar el cliente en el archivo
+        printf("\n\t\t\t\tEl cliente ha sido registrado con exito!!!\n\n");
+    }
+    else {
+        printf("\n\t\t\t\tEl cliente ya esta registrado\n\n");
+    }
+
+    //Ahora seguimos con la cuenta
     cuenta nueva_cuenta;
     nueva_cuenta.cuenta_cliente = numero_cuenta;
-    numero_cuenta++; //Incrementa el numero de cuenta para el siguiente cliente
     nueva_cuenta.dni_cliente = nuevo_cliente.dni;
     nueva_cuenta.saldo = 0;
-    //////////////////////////////////////////
 
+    //Aumento el nro de cuenta
+    numero_cuenta++; //Incrementa el numero de cuenta para el siguiente cliente
+
+    //Pido al cliente hacer un deposito
     solicitarDeposito(&nueva_cuenta);
 
+    //Me guardo la cuenta en la lista de cuentas
+    cuentas[numero_cuentas] = nueva_cuenta;
+    numero_cuentas++;
+
+    //Guardo la cuenta en disco
     guardarCuentasEnArchivo(nueva_cuenta);
 
-    //Verificamos si el cliente ya existe
 
-    int posicion = buscarCliente(clientes, *num_clientes, nuevo_cliente);
-    if (posicion != -1){
-        printf("\n\t\t\t\tEl cliente ya esta registrado\n\n");
-        return;
-    }
-    //Agregar el nuevo cliente a la lista
-    clientes[*num_clientes] = nuevo_cliente;
-    (*num_clientes)++;
-
-    guardarClientesEnArchivo(nuevo_cliente);// Llama a la función para guardar el cliente en el archivo
-    printf("\n\t\t\t\tEl cliente ha sido registrado con exito!!!\n\n");
 
 
 }
 
 //Funcion para guardar cuentas dentro un archivo, esta funcion recibira como parametros a la cuenta  a guardar y el nombre del archivo.
 void guardarCuentasEnArchivo(cuenta cuenta_cliente){
-    FILE *archivo = fopen(CUENTAS_FILE,"a"); //Con "a" abre y crea un nuevo fichero
+    FILE *archivo = fopen(CUENTAS_FILE,"ab"); //Con "a" abre y crea un nuevo fichero
     if (archivo == NULL){
         printf("Ha ocurrido un error al intentar abrir el archivo.\n");
         return;
     }
-    fprintf(
-            archivo,
-            "%i;%i;%f;\n",
-            cuenta_cliente.cuenta_cliente,
-            cuenta_cliente.dni_cliente,
-            cuenta_cliente.saldo
-    );
+    fwrite(&cuenta_cliente.cuenta_cliente, sizeof(&cuenta_cliente.cuenta_cliente), 1, archivo);
+    fwrite(&cuenta_cliente.dni_cliente, sizeof(&cuenta_cliente.dni_cliente), 1, archivo);
+    fwrite(&cuenta_cliente.saldo, sizeof(&cuenta_cliente.saldo), 1, archivo);
 
     fclose(archivo);
 }
@@ -327,72 +450,68 @@ void guardarCuentasEnArchivo(cuenta cuenta_cliente){
 //Funcion para guardar clientes dentro un archivo, esta funcion recibira como parametros al cliente  a guardar y el nombre del archivo.
 void guardarClientesEnArchivo(clienteInfo cliente){
 
-    FILE *archivo = fopen(CLIENTE_FILE,"a"); //Con "a" abre y crea un nuevo fichero
+    FILE *archivo = fopen(CLIENTE_FILE,"ab"); //Con "a" abre y crea un nuevo fichero
     if (archivo == NULL){
         printf("Ha ocurrido un error al intentar abrir el archivo.\n");
         return;
     }
-    fprintf(
-            archivo,
-            "%s;%s;%c;%i;%s;%i;%s\n",
-            cliente.nombre,
-            cliente.apellido,
-            cliente.sexo,
-            cliente.dni,
-            cliente.direccion,
-            cliente.telefono,
-            cliente.email
-    );
+    fwrite(&cliente.nombre , sizeof(&cliente.nombre), 1, archivo);
+    fwrite(&cliente.apellido, sizeof(&cliente.apellido), 1, archivo);
+    fwrite(&cliente.sexo, sizeof(&cliente.sexo), 1, archivo);
+    fwrite(&cliente.dni , sizeof(&cliente.dni), 1, archivo);
+    fwrite(&cliente.direccion, sizeof(&cliente.direccion), 1, archivo);
+    fwrite(&cliente.telefono, sizeof(&cliente.telefono), 1, archivo);
+    fwrite(&cliente.email, sizeof(&cliente.email), 1, archivo);
 
     fclose(archivo);
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////        FUNCIONES DE MOSTRAR CLIENTES    //////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 //Funcion para leer y mostrar los clientes almacenados en el archivo.
 void mostrarCliente() {
-    FILE *archivo_clientes = fopen(CLIENTE_FILE,"r");
-    if (archivo_clientes == NULL) {
-        printf("Ha ocurrido un error al intentar abrir el archivo de clientes.\n");
+    for (int x=0; x < numero_clientes; x++){
+        for (int y=0; y < numero_cuentas; y++){
+            if (cuentas[y].dni_cliente == clientes[x].dni){
+                printf("Nombre: %s\n",clientes[x].nombre);
+                printf("Apellido: %s\n",clientes[x].apellido);
+                printf("DNI: %i\n",clientes[x].dni);
+                printf("Numero de cuenta: %i\n",cuentas[y].cuenta_cliente);
+                printf("Saldo: %i\n",cuentas[y].saldo);
+                printf("----------------------------\n");
+            }
+        }
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////    FUNCIONES PARA ACTUALIZAR ARCHIVOS    ////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void actualizarArchivoClientes(int linea_a_actualizar, clienteInfo cliente_actualizado){
+    FILE *archivo = fopen(CLIENTE_FILE,"rb");
+    if (archivo == NULL) {
+        printf("No se encontro el archivo de clientes a actualizar\n");
         return;
     }
 
-    FILE *archivo_cuentas = fopen(CUENTAS_FILE,"r");
-    if (archivo_cuentas == NULL) {
-        printf("Ha ocurrido un error al intentar abrir el archivo de cuentas.\n");
-        return;
-    }
+    //Me desplazo en el archivo hasta el cliente que tengo que actualizar
+    int bytes_desplazamiento = linea_a_actualizar * sizeof(cliente_actualizado);
+    fseek(archivo, (float)bytes_desplazamiento, SEEK_SET);
 
-    char linea_csv_cuentas[100];
-    char linea_csv_clientes[100];
-    
-    char nro_cuenta[30];
-    float saldo;
-    int dni_cliente;
-    char nombre[20];
-    char apellido[20];
-    
+    //Piso el cliente viejo con el nuevo
+    fwrite(&cliente_actualizado.nombre , sizeof(&cliente_actualizado.nombre), 1, archivo);
+    fwrite(&cliente_actualizado.apellido, sizeof(&cliente_actualizado.apellido), 1, archivo);
+    fwrite(&cliente_actualizado.sexo, sizeof(&cliente_actualizado.sexo), 1, archivo);
+    fwrite(&cliente_actualizado.dni , sizeof(&cliente_actualizado.dni), 1, archivo);
+    fwrite(&cliente_actualizado.direccion, sizeof(&cliente_actualizado.direccion), 1, archivo);
+    fwrite(&cliente_actualizado.telefono, sizeof(&cliente_actualizado.telefono), 1, archivo);
+    fwrite(&cliente_actualizado.email, sizeof(&cliente_actualizado.email), 1, archivo);
 
-    while (fscanf(archivo_clientes, "%s;%s;%c;%i;%s;%i;%s\n", linea_csv_clientes) != EOF) {
+    fclose(archivo);
 
-        char *token = strtok(linea_csv_clientes, ";");
-        printf("Nombre: %s\n", token);
-        token = strtok(NULL, ";");
-        printf("Apellido: %s\n", token);
-        token = strtok(NULL, ";");
-        printf("Sexo: %s\n", token);
-        token = strtok(NULL, ";");
-        printf("DNI: %i\n", (int)token);
-        token = strtok(NULL, ";");
-        printf("Direccion: %s\n", token);
-        token = strtok(NULL, ";");
-        printf("Telefono: %i\n", (int)token);
-        token = strtok(NULL, ";");
-        printf("Email: %s\n", token);
-
-
-        printf("----------------------------\n");
-
-    }
-    fclose(archivo_clientes);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
