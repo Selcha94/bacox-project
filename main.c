@@ -1,20 +1,9 @@
 //Lista de pendientes
 // 1)Dar de alta una cuenta
-//  - Al dar de alta una cuenta, el cliente se tiene que guardar solamente si no existe en el archivo clientes.txt (OK)
 //  - Ni bien se crea la cuenta, tiene que pedir un deposito mayor a cero (Falta)
-//  - Aparte de guardar el cliente en clientes.txt, tambien hay que guardar la cuenta en cuentas.txt. Cada cuenta tendra:
-//    - Numero (Lo calculamos al momento de crear la cuenta, por ejemplo tomamos el numero de la cuenta anterior + 1)
-//    - Dni del titular
-//    - Saldo
-//  - Otra cosa que hay que guardar tambien es cada movimiento en un archivo movimientos.txt. Cada movimiento tendra:
-//    - Numero de cuenta
-//    - Monto
-//    - Tipo de movimiento (E o D, dependiendo de si es extraccion o deposito)
 // 2) Eliminar una cuenta
 //  - Al eliminar una cuenta, hay que validar primero que su saldo sea cero. Caso contrario no dejar eliminarla (Falta)
 //  - Al eliminar una cuenta, eliminar tambien al titular si es que no tiene ninguna otra cuenta aparte de la que se esta eliminando (Falta)
-// 3) Listado de cuentas con saldo entre minimo y maximo
-//  - Listar cuentas que tengan saldo entre un saldo minimo y maximo especificado por el usuario (Falta)
 // 4) Realizar una extraccion
 //  - Hacer una extraccion, validar que haya saldo suficiente primero (Falta)
 // 5) Depositar dinero
@@ -275,13 +264,52 @@ void convertirMayusculaMinuscula(char* cadena){
     }
 }
 
-//Convertir email a minuscula
+//Funcion que verifica que haya un arroba dentro del campo de email y despues hace la conversion a minuscula
 void convertirEmailMinuscula(char *cadena){
     int i;
+    int hayArroba = 0; //Variable para verificar que en el campo de email haya un arroba
+
+
     for (i=0; cadena[i]; i++){
-        cadena[i] = tolower(cadena[i]);
+        if (cadena[i] == '@')   {
+            hayArroba = 1; //Se encontro un arroba
+            break;
+        }
+        else    {
+            printf("\nRecuerde ingresar el @ dentro del campo del email.\n");
+        }
+    }
+    if(hayArroba) {
+        for (i=0; cadena[i]; i++)   {
+            cadena[i] =tolower(cadena[i]); //tolower funcion dentro de la libreria ctype.h para convertir en minuscula la cadena
+        }
     }
 }
+
+//Funcion para  validar los campos de nombre,apellido y direccion para que solo se ingresen letras
+//Recibe una cadena de caracteres y verifica si todos los caracteres son letras o espacios con la funcion isalpha()
+int validarLetra(const char *cadena){
+    int i;
+    for(i=0; cadena[i] != '\0'; i++){
+        if(!isalpha(cadena[i]) && cadena[i] !=' '){ //isalpha funcion de la biblioteca ctype.h
+            return 0; //Si se encuentra algun caracter no valido, retorna falso
+            }
+    }
+    return 1; //Si los caracteres ingresados son un espacio o letras, retorna verdadero
+}
+
+//Funcion para validar los campos para que solo se ingresen numeros
+//Toma una cadena como argumento y verifica que todos los caracteres ingresados sean numeros con la funcion isdigit
+int validarNumeros(const char *cadena) {
+    int i;
+    for(i=0;cadena[i] != '\0';i++){
+        if (!isdigit(cadena[i])){ //isdigit es una funcion de la biblioteca ctype.h
+            return 0; //La cadena contiene otros caracteres que no son numeros
+        }
+    }
+    return 1; //La cadena contiene numeros
+}
+
 
 //Funcion para buscar clientes en el arreglo de clientes
 int buscarCliente(clienteInfo cliente_buscado){
@@ -357,12 +385,19 @@ void registrarCliente(){
     fgets(nuevo_cliente.nombre, sizeof(nuevo_cliente.nombre),stdin);
     nuevo_cliente.nombre[strcspn(nuevo_cliente.nombre, "\n")] = '\0';//Elimina el caracter del '\n' despues de leerlo
     convertirMayusculaMinuscula(nuevo_cliente.nombre); //Verifica si la primera letra esta en mayuscula y sino lo esta la convertieen mayuscula
-
+    if (!validarLetra(nuevo_cliente.nombre)){
+            printf("\nNombre invalido.Recuerde ingresar solo letras y espacios.\n");
+            return;
+    }
 
     printf("\nIngrese el Apellido del cliente (%i caracteres apellido):", sizeof(nuevo_cliente.apellido));
     fgets(nuevo_cliente.apellido, sizeof(nuevo_cliente.apellido),stdin);
     nuevo_cliente.apellido[strcspn(nuevo_cliente.apellido, "\n")] = '\0';
     convertirMayusculaMinuscula(nuevo_cliente.apellido);
+    if (!validarLetra(nuevo_cliente.apellido)){
+            printf("\nApellido invalido.Recuerde ingresar solo letras y espacios.\n");
+            return;
+    }
 
     int sexo_valido = 0;
     while (! sexo_valido){
@@ -381,14 +416,27 @@ void registrarCliente(){
     scanf("%i",&nuevo_cliente.dni);
     getchar(); //De nuevo, "absorbo" el enter del input anterior
 
+    if(!validarNumeros(nuevo_cliente.dni))  {
+        printf("\nDNI invalido. Recuerde ingresar solo numeros.\n");
+        return;
+    }
+
     printf("\nIngrese la direccion del cliente (%i caracteres maximo):", sizeof(nuevo_cliente.direccion));
     fgets(nuevo_cliente.direccion, sizeof(nuevo_cliente.direccion),stdin);
     nuevo_cliente.direccion[strcspn(nuevo_cliente.direccion,"\n")]='\0';
     convertirMayusculaMinuscula(nuevo_cliente.direccion);
+    if (!validarLetra(nuevo_cliente.nombre)){
+            printf("\nDireccion invalida.Recuerde ingresar solo letras y espacios.\n");
+            return;
+    }
 
     printf("\nIngrese telefono del cliente:");
     scanf("%i",&nuevo_cliente.telefono);
     getchar(); //De nuevo, "absorbo" el enter del input anterior
+    if(!validarNumeros(nuevo_cliente.telefono))  {
+        printf("\nTelefono invalido. Recuerde ingresar solo numeros.\n");
+        return;
+    }
 
     printf("\nIngrese el Email del cliente:");
     fgets(nuevo_cliente.email, sizeof(nuevo_cliente.email),stdin);
@@ -427,9 +475,6 @@ void registrarCliente(){
 
     //Guardo la cuenta en disco
     guardarCuentasEnArchivo(nueva_cuenta);
-
-
-
 
 }
 
@@ -555,3 +600,4 @@ void limpiar_buffer(){
         buffer_char = getchar();
     }
 }
+
