@@ -472,17 +472,38 @@ void guardarClientesEnArchivo(clienteInfo cliente){
 
 //Funcion para leer y mostrar los clientes almacenados en el archivo.
 void mostrarCliente() {
+
+    int minimo;
+    int maximo;
+
+    printf("\nIngrese el saldo minimo de la cuenta a buscar:");
+    scanf("%i",&minimo);
+    getchar();
+
+    printf("\nIngrese el saldo maximo de la cuenta a buscar:");
+    scanf("%i",&maximo);
+    getchar();
+
+    int hay_resultados = 0;
+
     for (int x=0; x < numero_clientes; x++){
         for (int y=0; y < numero_cuentas; y++){
             if (cuentas[y].dni_cliente == clientes[x].dni){
-                printf("Nombre: %s\n",clientes[x].nombre);
-                printf("Apellido: %s\n",clientes[x].apellido);
-                printf("DNI: %i\n",clientes[x].dni);
-                printf("Numero de cuenta: %i\n",cuentas[y].cuenta_cliente);
-                printf("Saldo: %i\n",cuentas[y].saldo);
-                printf("----------------------------\n");
+                if(cuentas[y].saldo >= minimo && cuentas[y].saldo <= maximo){
+                    hay_resultados = 1;
+                    printf("\nNombre: %s\n",clientes[x].nombre);
+                    printf("Apellido: %s\n",clientes[x].apellido);
+                    printf("DNI: %i\n",clientes[x].dni);
+                    printf("Numero de cuenta: %i\n",cuentas[y].cuenta_cliente);
+                    printf("Saldo: %i\n",cuentas[y].saldo);
+                    printf("----------------------------\n");
+                }
             }
         }
+    }
+
+    if (! hay_resultados){
+        printf("\nNo se encontraron resultados para los parametros especificados\n");
     }
 }
 
