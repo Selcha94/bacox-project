@@ -1,4 +1,5 @@
 //Lista de pendientes
+// 0)Validar fecha al inicio
 // 1)Dar de alta una cuenta
 //  - Ni bien se crea la cuenta, tiene que pedir un deposito mayor a cero (Falta)
 // 2) Eliminar una cuenta
@@ -100,6 +101,7 @@ void guardarClientesEnArchivo(clienteInfo cliente);
 void guardarCuentasEnArchivo(cuenta cuentaCliente);
 void guardarMovimientosEnArchivo(movimientoInfo movimiento);
 void mostrarCliente();
+void realizarExtraccion();
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////      ZONA DE MAIN            ////////////////////////////////////////////////////////
@@ -120,12 +122,22 @@ int main()
 
         // Leer la opcion seleccionada por el usuario Menu
         int opcion;
+        char input[1];//Vairable para almacenar el input del usuario
         printf("\nIngrese una opcion: ");
-        scanf("%i",&opcion);
-        getchar(); //Esto te "absorbe" el enter con el que ingresaste el numero de opcion en la linea de arriba
+        scanf("%s",input);
 
-        switch(opcion)
-    {
+        //Valida que la opcion ingresada sea un numero
+        int es_numero = 1;
+        for(int i=0; input[i] !='\0';i++){
+            if(!isdigit(input[i])){
+                es_numero = 0;
+                break;
+            }
+        }
+        if(es_numero){
+            opcion = atoi(input); //convierte el input en entero
+            getchar(); //absorbe el salto de linea
+            switch(opcion) {
         case 1:
             registrarCliente();
             break;
@@ -135,6 +147,7 @@ int main()
             mostrarCliente();
             break;
         case 4:
+            realizarExtraccion();
             break;
         case 5:
             break;
@@ -145,10 +158,14 @@ int main()
             return 0;
         default:
             printf("\n");
-            printf("\t\t\tVuelva a intentarlo e ingrese una opcion correcta.\n");
+            printf("\t\t\tVuelva a intentarlo e ingrese una opcion valida.\n");
             break;
         }
+    }else{
+        printf("\n");
+        printf("\nLa opcion ingresada es incorrecta, recuerde ingresar un numero dentro de las opcion especificadas.\n");
     }
+}
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -186,6 +203,7 @@ void cargarDatos(){
         if (fread(&cuentas[i], sizeof(cuenta),1,archivo_cuentas)!=1)
             break;
 
+        numero_cuenta++;
         numero_cuentas++;
     }
     if (numero_cuentas > 0){
@@ -233,7 +251,7 @@ void menu(){
 // Funcion para solicitar fecha
 void solicitudFecha( int *dia, int *mes, int *anio){
 
-    printf("\n Ingrese la fecha correspondiente (en formato dd/mm/aaaa): ");
+    printf("\nIngrese la fecha correspondiente (en formato dd/mm/aaaa): ");
     scanf("%d/%d/%d", dia, mes, anio);
     printf("========================================================================================\n");
     printf("\n");
@@ -264,25 +282,24 @@ void convertirMayusculaMinuscula(char* cadena){
     }
 }
 
-//Funcion que verifica que haya un arroba dentro del campo de email y despues hace la conversion a minuscula
-void convertirEmailMinuscula(char *cadena){
+int validarEmail(char *cadena){
     int i;
-    int hayArroba = 0; //Variable para verificar que en el campo de email haya un arroba
-
 
     for (i=0; cadena[i]; i++){
         if (cadena[i] == '@')   {
-            hayArroba = 1; //Se encontro un arroba
-            break;
-        }
-        else    {
-            printf("\nRecuerde ingresar el @ dentro del campo del email.\n");
+            return 1;
         }
     }
-    if(hayArroba) {
-        for (i=0; cadena[i]; i++)   {
-            cadena[i] =tolower(cadena[i]); //tolower funcion dentro de la libreria ctype.h para convertir en minuscula la cadena
-        }
+
+    printf("\nRecuerde ingresar el @ dentro del campo del email.\n");
+    return 0;
+
+}
+
+//Funcion que verifica que haya un arroba dentro del campo de email y despues hace la conversion a minuscula
+void convertirEmailMinuscula(char *cadena){
+    for (int i=0; cadena[i]; i++)   {
+        cadena[i] =tolower(cadena[i]); //tolower funcion dentro de la libreria ctype.h para convertir en minuscula la cadena
     }
 }
 
@@ -334,9 +351,8 @@ void guardarMovimientosEnArchivo(movimientoInfo movimiento){
         printf("Ha ocurrido un error al intentar abrir el archivo.\n");
         return;
     }
-    fwrite(&movimiento.nro_cuenta , sizeof(&movimiento.nro_cuenta), 1, archivo);
-    fwrite(&movimiento.monto, sizeof(&movimiento.monto), 1, archivo);
-    fwrite(&movimiento.tipo, sizeof(&movimiento.tipo), 1, archivo);
+
+    fwrite(&movimiento , sizeof(movimientoInfo), 1, archivo);
 
     fclose(archivo);
 }
@@ -366,6 +382,24 @@ void solicitarDeposito(cuenta *cuenta){
 
     registrarMovimiento(cuenta->cuenta_cliente, monto, "D");
 
+}
+
+/*Funcion para realizar Extracciones de dinero.*/
+//En esta funcion, se pasa un puntero al cliente para poder modificar directamente la cuenta del cliente
+void solicitarExtraccion(cuenta *cuenta){
+
+    printf("\nIngrese el monto a extraer de la cuenta:");
+    int monto = 0;
+    scanf("%i", &monto);
+
+    if (cuenta->saldo < monto){
+        scanf("El monto a extraer es mayor al saldo de la cuenta");
+        return;
+    }
+    cuenta->saldo -= monto;
+
+    registrarMovimiento(cuenta->cuenta_cliente, monto, "E");
+    return;
 }
 
 /*Funcion Cliente con informacion del Cliente*/
@@ -412,7 +446,7 @@ void registrarCliente(){
         printf("\nIngrese el sexo (M o F):");
         scanf("%c",&nuevo_cliente.sexo);
         if (nuevo_cliente.sexo != 'M' && nuevo_cliente.sexo != 'F'){
-            printf("\n\tSexo invalido, debe ser M o F");
+            printf("\n\tSexo invalido, debe ser M o F\n");
         }
         else{
             sexo_valido = 1;
@@ -422,16 +456,19 @@ void registrarCliente(){
 
     int dni_valido = 0;
     while(!dni_valido){
-        printf("\nIngrese el DNI del cliente (sin puntos):");
-        scanf("%i",&nuevo_cliente.dni);
-        if(!validarNumeros(nuevo_cliente.dni)){
-            printf("\nDNI invalido. Recuerde ingresar solo numeros.\n");
+        char dni_char[9]; //Ponemos 9 en vez de 8 para contemplar el \n
+        printf("\nIngrese el DNI del cliente (ocho numeros sin puntos):");
+        fgets(dni_char, sizeof(dni_char),stdin);
+        if(!validarNumeros(dni_char)){
+            printf("\nDNI invalido. Recuerde ingresar solo numeros, sin puntos.\n");
         }else{
             dni_valido = 1;
+            dni_char[strcspn(dni_char, "\n")] = '\0';
+            nuevo_cliente.dni = atoi(dni_char);
+            getchar();
         }
     }
-    getchar(); //De nuevo, "absorbo" el enter del input anterior
-
+    getchar();
 
     printf("\nIngrese la direccion del cliente (%i caracteres maximo):", sizeof(nuevo_cliente.direccion));
     fgets(nuevo_cliente.direccion, sizeof(nuevo_cliente.direccion),stdin);
@@ -440,20 +477,27 @@ void registrarCliente(){
 
     int telefono_valido = 0;
     while(!telefono_valido){
-        printf("\nIngrese telefono del cliente:");
-        scanf("%i",&nuevo_cliente.telefono);
-        if(!validarNumeros(nuevo_cliente.telefono)){
-            printf("\nTelefono invalido. Recuerde ingresar solo numeros.\n");
+        char telefono_char[9]; //Ponemos 9 en vez de 8 para contemplar el \n
+        printf("\nIngrese telefono del cliente (8 digitos, sin 0 ni 15):");
+        fgets(telefono_char, sizeof(telefono_char), stdin);
+        if(!validarNumeros(telefono_char)){
+            printf("\nTelefono invalido. Recuerde ingresar solo numeros, sin 0 ni 15.\n");
         }else{
             telefono_valido = 1;
+            telefono_char[strcspn(telefono_char, "\n")] = '\0';
+            nuevo_cliente.telefono = atoi(telefono_char);
+            getchar();
         }
     }
-    getchar(); //De nuevo, "absorbo" el enter del input anterior
+    getchar();
 
-
-    printf("\nIngrese el Email del cliente:");
-    fgets(nuevo_cliente.email, sizeof(nuevo_cliente.email),stdin);
-    nuevo_cliente.email[strcspn(nuevo_cliente.email,"\n")]='\0';
+    int emailValido = 0;
+    while (!emailValido){
+        printf("\nIngrese el Email del cliente:");
+        fgets(nuevo_cliente.email, sizeof(nuevo_cliente.email),stdin);
+        nuevo_cliente.email[strcspn(nuevo_cliente.email,"\n")]='\0';
+        emailValido = validarEmail(nuevo_cliente.email);
+    }
     convertirEmailMinuscula(nuevo_cliente.email); //Verifica si el correo esta escrito en minuscula o mayuscula y hace la conversion a minuscula si esta en mayuscula
 
     //Verificamos si el cliente ya existe
@@ -498,9 +542,8 @@ void guardarCuentasEnArchivo(cuenta cuenta_cliente){
         printf("Ha ocurrido un error al intentar abrir el archivo.\n");
         return;
     }
-    fwrite(&cuenta_cliente.cuenta_cliente, sizeof(&cuenta_cliente.cuenta_cliente), 1, archivo);
-    fwrite(&cuenta_cliente.dni_cliente, sizeof(&cuenta_cliente.dni_cliente), 1, archivo);
-    fwrite(&cuenta_cliente.saldo, sizeof(&cuenta_cliente.saldo), 1, archivo);
+
+    fwrite(&cuenta_cliente, sizeof(cuenta), 1, archivo);
 
     fclose(archivo);
 }
@@ -513,13 +556,8 @@ void guardarClientesEnArchivo(clienteInfo cliente){
         printf("Ha ocurrido un error al intentar abrir el archivo.\n");
         return;
     }
-    fwrite(&cliente.nombre , sizeof(&cliente.nombre), 1, archivo);
-    fwrite(&cliente.apellido, sizeof(&cliente.apellido), 1, archivo);
-    fwrite(&cliente.sexo, sizeof(&cliente.sexo), 1, archivo);
-    fwrite(&cliente.dni , sizeof(&cliente.dni), 1, archivo);
-    fwrite(&cliente.direccion, sizeof(&cliente.direccion), 1, archivo);
-    fwrite(&cliente.telefono, sizeof(&cliente.telefono), 1, archivo);
-    fwrite(&cliente.email, sizeof(&cliente.email), 1, archivo);
+
+    fwrite(&cliente , sizeof(clienteInfo), 1, archivo);
 
     fclose(archivo);
 }
@@ -566,11 +604,35 @@ void mostrarCliente() {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////        FUNCIONES DE REALIZAR EXTRACCION    ///////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void realizarExtraccion(){
+
+    printf("\nIngrese el numero de la cuenta:");
+    int nro_cuenta_extraccion = 0;
+    scanf("%i", &nro_cuenta_extraccion);
+
+    for (int i=0; i < numero_cuentas; i++){
+        if (cuentas[i].cuenta_cliente == nro_cuenta_extraccion ){
+            cuentas[i];
+
+            solicitarExtraccion(&cuentas[i]);
+            actualizarArchivoCuentas(i, cuentas[i]); //Le paso linea del archivo a actualizar y los datos actualizados de cuenta
+            return;
+        }
+    }
+    printf("\nNo existe ninguna cuenta para el numero ingresado");
+    return;
+
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////    FUNCIONES PARA ACTUALIZAR ARCHIVOS    ////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void actualizarArchivoClientes(int linea_a_actualizar, clienteInfo cliente_actualizado){
-    FILE *archivo = fopen(CLIENTE_FILE,"rb");
+    FILE *archivo = fopen(CLIENTE_FILE,"wb");
     if (archivo == NULL) {
         printf("No se encontro el archivo de clientes a actualizar\n");
         return;
@@ -581,16 +643,33 @@ void actualizarArchivoClientes(int linea_a_actualizar, clienteInfo cliente_actua
     fseek(archivo, (float)bytes_desplazamiento, SEEK_SET);
 
     //Piso el cliente viejo con el nuevo
-    fwrite(&cliente_actualizado.nombre , sizeof(&cliente_actualizado.nombre), 1, archivo);
-    fwrite(&cliente_actualizado.apellido, sizeof(&cliente_actualizado.apellido), 1, archivo);
-    fwrite(&cliente_actualizado.sexo, sizeof(&cliente_actualizado.sexo), 1, archivo);
-    fwrite(&cliente_actualizado.dni , sizeof(&cliente_actualizado.dni), 1, archivo);
-    fwrite(&cliente_actualizado.direccion, sizeof(&cliente_actualizado.direccion), 1, archivo);
-    fwrite(&cliente_actualizado.telefono, sizeof(&cliente_actualizado.telefono), 1, archivo);
-    fwrite(&cliente_actualizado.email, sizeof(&cliente_actualizado.email), 1, archivo);
+    fwrite(&cliente_actualizado , sizeof(clienteInfo), 1, archivo);
 
+    //No se si hace falta, pero por las dudas vuelvo a poner el cursor al final del archivo
+    bytes_desplazamiento = numero_clientes * sizeof(clienteInfo);
+    fseek(archivo, (float)bytes_desplazamiento, SEEK_SET);
     fclose(archivo);
 
+}
+
+void actualizarArchivoCuentas(int linea_a_actualizar, cuenta cuenta_actualizada){
+    FILE *archivo = fopen(CUENTAS_FILE,"wb");
+    if (archivo == NULL) {
+        printf("No se encontro el archivo de cuentas a actualizar\n");
+        return;
+    }
+
+    //Me desplazo en el archivo hasta la cuenta que tengo que actualizar
+    int bytes_desplazamiento = linea_a_actualizar * sizeof(cuenta);
+    fseek(archivo, (float)bytes_desplazamiento, SEEK_SET);
+
+    //Piso la cuenta vieja con la nueva
+    fwrite(&cuenta_actualizada , sizeof(cuenta), 1, archivo);
+
+    //No se si hace falta, pero por las dudas vuelvo a poner el cursor al final del archivo
+    bytes_desplazamiento = numero_cuentas * sizeof(cuenta);
+    fseek(archivo, (float)bytes_desplazamiento, SEEK_SET);
+    fclose(archivo);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
