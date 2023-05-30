@@ -632,7 +632,7 @@ void realizarExtraccion(){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void actualizarArchivoClientes(int linea_a_actualizar, clienteInfo cliente_actualizado){
-    FILE *archivo = fopen(CLIENTE_FILE,"wb");
+    FILE *archivo = fopen(CLIENTE_FILE,"rb+");
     if (archivo == NULL) {
         printf("No se encontro el archivo de clientes a actualizar\n");
         return;
@@ -653,7 +653,7 @@ void actualizarArchivoClientes(int linea_a_actualizar, clienteInfo cliente_actua
 }
 
 void actualizarArchivoCuentas(int linea_a_actualizar, cuenta cuenta_actualizada){
-    FILE *archivo = fopen(CUENTAS_FILE,"wb");
+    FILE *archivo = fopen(CUENTAS_FILE,"rb+");
     if (archivo == NULL) {
         printf("No se encontro el archivo de cuentas a actualizar\n");
         return;
