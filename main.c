@@ -381,30 +381,38 @@ void registrarCliente(){
 
     clienteInfo nuevo_cliente;
 
-    printf("\nIngrese el Nombre del cliente (%i caracteres maximo):", sizeof(nuevo_cliente.nombre));
-    fgets(nuevo_cliente.nombre, sizeof(nuevo_cliente.nombre),stdin);
-    nuevo_cliente.nombre[strcspn(nuevo_cliente.nombre, "\n")] = '\0';//Elimina el caracter del '\n' despues de leerlo
-    convertirMayusculaMinuscula(nuevo_cliente.nombre); //Verifica si la primera letra esta en mayuscula y sino lo esta la convertieen mayuscula
-    if (!validarLetra(nuevo_cliente.nombre)){
+    int nombre_valido = 0;
+    while(!nombre_valido){
+        printf("\nIngrese el Nombre del cliente (%i caracteres maximo):", sizeof(nuevo_cliente.nombre));
+        fgets(nuevo_cliente.nombre, sizeof(nuevo_cliente.nombre),stdin);
+        nuevo_cliente.nombre[strcspn(nuevo_cliente.nombre, "\n")] = '\0';//Elimina el caracter del '\n' despues de leerlo
+        if (!validarLetra(nuevo_cliente.nombre)){
             printf("\nNombre invalido.Recuerde ingresar solo letras y espacios.\n");
-            return;
+        }else{
+            nombre_valido = 1;
+        }
     }
+    convertirMayusculaMinuscula(nuevo_cliente.nombre); //Verifica si la primera letra esta en mayuscula y sino lo esta la convertieen mayuscula
 
-    printf("\nIngrese el Apellido del cliente (%i caracteres apellido):", sizeof(nuevo_cliente.apellido));
-    fgets(nuevo_cliente.apellido, sizeof(nuevo_cliente.apellido),stdin);
-    nuevo_cliente.apellido[strcspn(nuevo_cliente.apellido, "\n")] = '\0';
-    convertirMayusculaMinuscula(nuevo_cliente.apellido);
-    if (!validarLetra(nuevo_cliente.apellido)){
+    int apellido_valido = 0;
+    while(!apellido_valido){
+        printf("\nIngrese el Apellido del cliente (%i caracteres apellido):", sizeof(nuevo_cliente.apellido));
+        fgets(nuevo_cliente.apellido, sizeof(nuevo_cliente.apellido),stdin);
+        nuevo_cliente.apellido[strcspn(nuevo_cliente.apellido, "\n")] = '\0';
+        if (!validarLetra(nuevo_cliente.apellido)){
             printf("\nApellido invalido.Recuerde ingresar solo letras y espacios.\n");
-            return;
+        }else{
+            apellido_valido = 1;
+        }
     }
+    convertirMayusculaMinuscula(nuevo_cliente.apellido);
 
     int sexo_valido = 0;
     while (! sexo_valido){
         printf("\nIngrese el sexo (M o F):");
         scanf("%c",&nuevo_cliente.sexo);
         if (nuevo_cliente.sexo != 'M' && nuevo_cliente.sexo != 'F'){
-            printf("Sexo invalido, debe ser M o F");
+            printf("\n\tSexo invalido, debe ser M o F");
         }
         else{
             sexo_valido = 1;
@@ -412,31 +420,36 @@ void registrarCliente(){
     }
     getchar(); //De nuevo, "absorbo" el enter del input anterior
 
-    printf("\nIngrese el DNI del cliente (sin puntos):");
-    scanf("%i",&nuevo_cliente.dni);
+    int dni_valido = 0;
+    while(!dni_valido){
+        printf("\nIngrese el DNI del cliente (sin puntos):");
+        scanf("%i",&nuevo_cliente.dni);
+        if(!validarNumeros(nuevo_cliente.dni)){
+            printf("\nDNI invalido. Recuerde ingresar solo numeros.\n");
+        }else{
+            dni_valido = 1;
+        }
+    }
     getchar(); //De nuevo, "absorbo" el enter del input anterior
 
-    if(!validarNumeros(nuevo_cliente.dni))  {
-        printf("\nDNI invalido. Recuerde ingresar solo numeros.\n");
-        return;
-    }
 
     printf("\nIngrese la direccion del cliente (%i caracteres maximo):", sizeof(nuevo_cliente.direccion));
     fgets(nuevo_cliente.direccion, sizeof(nuevo_cliente.direccion),stdin);
     nuevo_cliente.direccion[strcspn(nuevo_cliente.direccion,"\n")]='\0';
     convertirMayusculaMinuscula(nuevo_cliente.direccion);
-    if (!validarLetra(nuevo_cliente.nombre)){
-            printf("\nDireccion invalida.Recuerde ingresar solo letras y espacios.\n");
-            return;
-    }
 
-    printf("\nIngrese telefono del cliente:");
-    scanf("%i",&nuevo_cliente.telefono);
-    getchar(); //De nuevo, "absorbo" el enter del input anterior
-    if(!validarNumeros(nuevo_cliente.telefono))  {
-        printf("\nTelefono invalido. Recuerde ingresar solo numeros.\n");
-        return;
+    int telefono_valido = 0;
+    while(!telefono_valido){
+        printf("\nIngrese telefono del cliente:");
+        scanf("%i",&nuevo_cliente.telefono);
+        if(!validarNumeros(nuevo_cliente.telefono)){
+            printf("\nTelefono invalido. Recuerde ingresar solo numeros.\n");
+        }else{
+            telefono_valido = 1;
+        }
     }
+    getchar(); //De nuevo, "absorbo" el enter del input anterior
+
 
     printf("\nIngrese el Email del cliente:");
     fgets(nuevo_cliente.email, sizeof(nuevo_cliente.email),stdin);
