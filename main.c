@@ -1,14 +1,5 @@
 //Lista de pendientes
 // 0)Validar fecha al inicio
-// 1)Dar de alta una cuenta
-//  - Ni bien se crea la cuenta, tiene que pedir un deposito mayor a cero (Falta)
-// 2) Eliminar una cuenta
-//  - Al eliminar una cuenta, hay que validar primero que su saldo sea cero. Caso contrario no dejar eliminarla (Falta)
-//  - Al eliminar una cuenta, eliminar tambien al titular si es que no tiene ninguna otra cuenta aparte de la que se esta eliminando (Falta)
-// 4) Realizar una extraccion
-//  - Hacer una extraccion, validar que haya saldo suficiente primero (Falta)
-// 5) Depositar dinero
-//  - Depositar dinero en una cuenta
 // 6) Generar un archivo de texto de movimientos para una fecha ingresada por el usuario
 //  - Exportar en un archivo .txt todos los movimientos realizados en una cuenta para una determinada fecha que el usuario especifique por parametro (Falta)
 
@@ -102,6 +93,9 @@ void guardarCuentasEnArchivo(cuenta cuentaCliente);
 void guardarMovimientosEnArchivo(movimientoInfo movimiento);
 void mostrarCliente();
 void realizarExtraccion();
+void realizarDeposito();
+void eliminarCuenta();
+void listaClientes();
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////      ZONA DE MAIN            ////////////////////////////////////////////////////////
@@ -142,6 +136,7 @@ int main()
             registrarCliente();
             break;
         case 2:
+            eliminarCuenta();
             break;
         case 3:
             mostrarCliente();
@@ -150,10 +145,14 @@ int main()
             realizarExtraccion();
             break;
         case 5:
+            realizarDeposito();
             break;
         case 6:
             break;
         case 7:
+            listaClientes();
+            break;
+        case 8:
             printf("\nSaliendo del programa...\n");
             return 0;
         default:
@@ -244,21 +243,69 @@ void menu(){
     printf("\t4. Realizar una extraccion.\n");
     printf("\t5. Depositar Dinero.\n");
     printf("\t6. Movimientos.\n");
-    printf("\t7. Salir\n");
+    printf("\t7. Listado de clientes.\n");
+    printf("\t8. Salir\n");
 
 }
 
 // Funcion para solicitar fecha
 void solicitudFecha( int *dia, int *mes, int *anio){
 
-    printf("\nIngrese la fecha correspondiente (en formato dd/mm/aaaa): ");
-    scanf("%d/%d/%d", dia, mes, anio);
+    // dia_ingresado, mes_ingresado, anio_ingresado;
+    int fecha_valida = 0;
+
+    while (!fecha_valida){
+        printf("\nIngrese la fecha correspondiente (en formato dd/mm/aaaa): ");
+        scanf("%d/%d/%d", &dia, &mes, &anio);
+
+        fecha_valida = verificarFecha(dia,mes,anio);
+        if(!fecha_valida){
+            printf("La fecha ingresada es invalida. Intentelo nuevamente.\n");
+        }
+    }
+
     printf("========================================================================================\n");
     printf("\n");
     printf("\t\t\t\t La fecha ingresada es: %02d/%02d/%d \n\n ", *dia, *mes, *anio);
 
 }
+void verificarFecha(int dia, int mes, int anio){
+    //Verificar si el año es valido
+    if(anio < 1900 || anio > 2100){
+        return 0; //año invalido
+    }
+    //Verificar si el mes es valido
+    if(mes < 1 || mes > 12){
+        return 0; //mes invalido
+    }
+    //Valida si el dia es valido
+    int dias;
 
+    switch(mes){
+        case 2; //febrero
+        //Verifica si es un año bisiesto
+        if((anio % 4 == 0 && anio % 100 != 0) || anio % 400 == 0 ){
+            dias = 29;
+        }else{
+            dias =28;
+        }
+        break;
+
+        case 4;//abril
+        case 6;//Junio
+        case 9;//Septiembre
+        case 11;// Noviembre
+            dias =30;
+            break;
+        default: //Meses con 31 dias
+            dias = 31;
+            break;
+    }
+    if (dia < 1 || dia > dias){
+        return 0; //Dia invalido
+    }
+    return 1; //Fecha valida
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////        FUNCIONES DE CREACION DE CLIENTES Y CUENTAS    //////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -333,12 +380,15 @@ int buscarCliente(clienteInfo cliente_buscado){
 
     int i;
     for (i=0; i < numero_clientes;i++){
-        if (strcmp(clientes[i].nombre, cliente_buscado.nombre) == 0 &&
-        strcmp(clientes[i].apellido, cliente_buscado.apellido) == 0 &&
-        clientes[i].sexo == cliente_buscado.sexo && clientes[i].dni == cliente_buscado.dni &&
-        strcmp(clientes[i].direccion, cliente_buscado.direccion) == 0 &&
-        strcmp(clientes[i].telefono, cliente_buscado.telefono) == 0 &&
-        strcmp(clientes[i].email, cliente_buscado.email) == 0){
+        if (
+            strcmp(clientes[i].nombre, cliente_buscado.nombre) == 0 &&
+            strcmp(clientes[i].apellido, cliente_buscado.apellido) == 0 &&
+            clientes[i].sexo == cliente_buscado.sexo &&
+            clientes[i].dni == cliente_buscado.dni &&
+            strcmp(clientes[i].direccion, cliente_buscado.direccion) == 0 &&
+            clientes[i].telefono == cliente_buscado.telefono &&
+            strcmp(clientes[i].email, cliente_buscado.email) == 0
+        ){
             return i;
         }
     }
@@ -375,10 +425,20 @@ void registrarMovimiento(int nro_cuenta, float monto, char tipo_movimiento){
 //En esta funcion, se pasa un puntero al cliente para poder modificar directamente la cuenta del cliente
 void solicitarDeposito(cuenta *cuenta){
 
-    printf("\nIngrese el monto del deposito realizado por el cliente:");
     int monto = 0;
-    scanf("%i", &monto);
-    cuenta->saldo += monto;
+    int monto_valido = 0;
+
+    while (!monto_valido){
+        printf("\nIngrese el monto del deposito realizado por el cliente:");
+        scanf("%i", &monto);
+        if (monto > 0){
+            monto_valido = 1;
+            cuenta->saldo += monto;
+        }
+        else{
+            printf("Monto del deposito debe ser mayor a cero");
+        }
+    }
 
     registrarMovimiento(cuenta->cuenta_cliente, monto, "D");
 
@@ -563,6 +623,87 @@ void guardarClientesEnArchivo(clienteInfo cliente){
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////        FUNCIONES DE ELIMINAR CUENTA    ///////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void eliminarCuenta(){
+
+    printf("\nIngrese el numero de la cuenta:");
+    int nro_cuenta_a_eliminar = 0;
+    scanf("%i", &nro_cuenta_a_eliminar);
+
+    //Esta variable me va a servir para saber si la cuenta que elimino es la unica que el cliente tenia
+    int dni_cliente_cuenta = 0;
+
+    for (int i=0; i < numero_cuentas; i++){
+
+        if (cuentas[i].cuenta_cliente == nro_cuenta_a_eliminar ){
+
+            if (cuentas[i].saldo > 0){
+                printf("\nLa cuenta tiene saldo mayor a cero, no se puede eliminar.\n");
+                return;
+            }
+
+            dni_cliente_cuenta = cuentas[i].dni_cliente;
+
+            //La posicion en donde esta la cuenta a eliminar la piso con la ultima cuenta
+            cuentas[i] = cuentas[numero_cuentas - 1];
+
+            //Y la posicion de la ultima cuenta la piso con una cuenta vacia
+            cuenta cuenta_vacia;
+            cuentas[numero_cuentas - 1] = cuenta_vacia;
+
+            //Actualizo en el archivo las dos cuentas modificadas
+            actualizarArchivoCuentas(i, cuentas[i]);
+            actualizarArchivoCuentas(numero_cuentas - 1, cuenta_vacia);
+
+            //Bajo en uno el numero de cuentas
+            numero_cuentas--;
+            printf("\nCuenta eliminada con exito\n");
+
+            //Vuelvo a recorrer una vez mas el listado de cuentas para saber si al cliente le queda otra cuenta
+            for (int i=0; i < numero_cuentas; i++){
+
+                if (cuentas[i].dni_cliente == dni_cliente_cuenta ){
+                    //Al cliente le queda otra cuenta, no lo elimino
+                    return;
+                }
+
+            }
+
+            //Si llego aca es porque al cliente no le quedan mas cuentas, lo elimino.
+            for (int i=0; i < numero_clientes; i++){
+
+                if(clientes[i].dni == dni_cliente_cuenta){
+
+                    //Misma logica que hice arriba para eliminar cuenta
+                    clientes[i] = clientes[numero_clientes - 1];
+                    clienteInfo clienteVacio;
+                    clientes[numero_clientes - 1] = clienteVacio;
+
+                    //Actualizo en el archivo las dos cuentas modificadas
+                    actualizarArchivoClientes(i, clientes[i]);
+                    actualizarArchivoClientes(numero_clientes - 1, clienteVacio);
+
+                    //Bajo en uno el numero de clientes
+                    numero_clientes--;
+                    printf("\nCliente eliminado con exito\n");
+                    break;
+                }
+
+            }
+
+            return;
+
+        }
+    }
+
+    printf("\nNo existe ninguna cuenta para el numero ingresado\n");
+    return;
+
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////        FUNCIONES DE MOSTRAR CLIENTES    //////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -624,6 +765,56 @@ void realizarExtraccion(){
     }
     printf("\nNo existe ninguna cuenta para el numero ingresado");
     return;
+
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////        FUNCIONES DE REALIZAR DEPOSITO      ///////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void realizarDeposito(){
+
+    printf("\nIngrese el numero de la cuenta:");
+    int nro_cuenta_deposito = 0;
+    scanf("%i", &nro_cuenta_deposito);
+
+    for (int i=0; i < numero_cuentas; i++){
+        if (cuentas[i].cuenta_cliente == nro_cuenta_deposito ){
+            cuentas[i];
+
+            solicitarDeposito(&cuentas[i]);
+            actualizarArchivoCuentas(i, cuentas[i]); //Le paso linea del archivo a actualizar y los datos actualizados de cuenta
+            return;
+        }
+    }
+    printf("\nNo existe ninguna cuenta para el numero ingresado");
+    return;
+
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////        FUNCIONES DE LISTA CLIENTES      ////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//Esta funcion devuelve la lista de datos de cada cliente, sin ningun filtro
+void listaClientes(){
+
+    if (numero_clientes == 0){
+        printf("\nNo hay clientes que mostrar\n");
+        return;
+    }
+
+    for (int x=0; x < numero_clientes; x++){
+
+        printf("\nNombre: %s\n",clientes[x].nombre);
+        printf("Apellido: %s\n",clientes[x].apellido);
+        printf("SEXO: %c\n",clientes[x].sexo);
+        printf("DNI: %i\n",clientes[x].dni);
+        printf("Direccion: %s\n",clientes[x].direccion);
+        printf("Telefono: %i\n",clientes[x].telefono);
+        printf("Email: %s\n",clientes[x].email);
+        printf("----------------------------\n");
+    }
 
 }
 
@@ -692,4 +883,3 @@ void limpiar_buffer(){
         buffer_char = getchar();
     }
 }
-
