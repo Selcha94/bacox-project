@@ -1,5 +1,6 @@
 //Lista de pendientes
 // 0)Validar fecha al inicio
+// Validar que la fecha que se ingresa sea un numero
 // 6) Generar un archivo de texto de movimientos para una fecha ingresada por el usuario
 //  - Exportar en un archivo .txt todos los movimientos realizados en una cuenta para una determinada fecha que el usuario especifique por parametro (Falta)
 
@@ -49,6 +50,9 @@ typedef struct
     int nro_cuenta;
     float monto;
     char tipo; //Puede ser E o D
+    int dia;
+    int mes;
+    int anio;
 }movimientoInfo;
 
 
@@ -255,10 +259,24 @@ void solicitudFecha( int *dia, int *mes, int *anio){
     int fecha_valida = 0;
 
     while (!fecha_valida){
-        printf("\nIngrese la fecha correspondiente (en formato dd/mm/aaaa): ");
-        scanf("%d/%d/%d", &dia, &mes, &anio);
 
-        fecha_valida = verificarFecha(dia,mes,anio);
+        char char_dia[3];
+        char char_mes[3];
+        char char_anio[5];
+
+        printf("\nIngrese el dia de la fecha correspondiente:");
+        fgets(char_dia, sizeof(char_dia),stdin);
+        getchar();
+
+        printf("\nIngrese el mes de la fecha correspondiente:");
+        fgets(char_mes, sizeof(char_mes),stdin);
+        getchar();
+
+        printf("\nIngrese el anio de la fecha correspondiente:");
+        fgets(char_anio, sizeof(char_anio),stdin);
+        getchar();
+
+        fecha_valida = verificarFecha(char_dia,char_mes,char_anio);
         if(!fecha_valida){
             printf("La fecha ingresada es invalida. Intentelo nuevamente.\n");
         }
@@ -269,43 +287,75 @@ void solicitudFecha( int *dia, int *mes, int *anio){
     printf("\t\t\t\t La fecha ingresada es: %02d/%02d/%d \n\n ", *dia, *mes, *anio);
 
 }
-void verificarFecha(int dia, int mes, int anio){
+void verificarFecha(char *char_dia, char *char_mes, char *char_anio){
+
     //Verificar si el año es valido
-    if(anio < 1900 || anio > 2100){
-        return 0; //año invalido
+    if(!validarNumeros(char_anio)){
+        printf("\nAnio invalido. Recuerde ingresar solo numeros.\n");
+        return 0;
     }
+    else{
+        char_anio[strcspn(char_anio, "\n")] = '\0';
+        anio = atoi(char_anio);
+    }
+    if(anio < 1900 || anio > 2100){
+        printf("El año ingresado es invalido");
+        return 0;
+    }
+
     //Verificar si el mes es valido
+    if(!validarNumeros(char_mes)){
+        printf("\nMes invalido. Recuerde ingresar solo numeros.\n");
+        return 0;
+    }
+    else{
+        char_mes[strcspn(char_anio, "\n")] = '\0';
+        mes = atoi(char_mes);
+    }
     if(mes < 1 || mes > 12){
+        printf("El mes ingresado es invalido, recuerde ingresar un mes del 1 al 12");
         return 0; //mes invalido
     }
     //Valida si el dia es valido
+    if(!validarNumeros(char_dia)){
+        printf("\nDia invalido. Recuerde ingresar solo numeros.\n");
+        return 0;
+    }
+    else{
+        char_dia[strcspn(char_dia, "\n")] = '\0';
+        dia = atoi(char_dia);
+    }
+
     int dias;
 
     switch(mes){
-        case 2; //febrero
+        case 2: //febrero
         //Verifica si es un año bisiesto
         if((anio % 4 == 0 && anio % 100 != 0) || anio % 400 == 0 ){
             dias = 29;
         }else{
-            dias =28;
+            dias = 28;
         }
         break;
 
-        case 4;//abril
-        case 6;//Junio
-        case 9;//Septiembre
-        case 11;// Noviembre
-            dias =30;
+        case 4://abril
+        case 6://Junio
+        case 9://Septiembre
+        case 11:// Noviembre
+            dias = 30;
             break;
         default: //Meses con 31 dias
             dias = 31;
-            break;
+        break;
     }
     if (dia < 1 || dia > dias){
+        printf("\nEl dia ingresado esta por fuera del rango permitido del mes.");
         return 0; //Dia invalido
     }
+    printf("\nFECHA CORRECTA!");
     return 1; //Fecha valida
 }
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////        FUNCIONES DE CREACION DE CLIENTES Y CUENTAS    //////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -413,6 +463,9 @@ void registrarMovimiento(int nro_cuenta, float monto, char tipo_movimiento){
     nuevo_movimiento.nro_cuenta = nro_cuenta;
     nuevo_movimiento.monto = monto;
     nuevo_movimiento.tipo = tipo_movimiento;
+    nuevo_movimiento.dia = dia;
+    nuevo_movimiento.mes = mes;
+    nuevo_movimiento.mes = anio;
 
     movimientos[numero_movimientos] = nuevo_movimiento;
     numero_movimientos++;
