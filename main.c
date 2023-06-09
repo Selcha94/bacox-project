@@ -48,7 +48,7 @@ typedef struct
 typedef struct
 {
     int nro_cuenta;
-    float monto;
+    int monto;
     char tipo; //Puede ser E o D
     int dia;
     int mes;
@@ -87,12 +87,12 @@ void cargarDatos(); //Funcion inicial que busca cuentas, clientes y movimientos 
 void menu();
 void solicitarDeposito(cuenta *cuenta);
 void registrarCliente();
-void registrarMovimiento(int nro_cuenta, float monto, char tipo_movimiento);
+void registrarMovimiento(int nro_cuenta, int monto, char tipo_movimiento);
 int buscarCliente(clienteInfo cliente_buscado);
 void convertirMayusculaMinuscula(char* cadena);
 void convertirEmailMinuscula(char *cadena);
-void solicitudFecha( int *dia, int *mes, int *anio, int guardarFecha);
-int verificarFecha(char *char_dia, char *char_mes, char *char_anio, int guardarFecha);
+void solicitudFecha( int *dia, int *mes, int *anio);
+int verificarFecha(char *char_dia, char *char_mes, char *char_anio, int *int_dia, int *int_mes, int *int_anio);
 void guardarClientesEnArchivo(clienteInfo cliente);
 void guardarCuentasEnArchivo(cuenta cuentaCliente);
 void guardarMovimientosEnArchivo(movimientoInfo movimiento);
@@ -114,7 +114,7 @@ int main()
     cargarDatos();
 
     // Solicitud de ingreso de fecha
-    solicitudFecha( &dia, &mes, &anio,1);
+    solicitudFecha( &dia, &mes, &anio);
 
     while(1){
 
@@ -256,16 +256,16 @@ void menu(){
 }
 
 // Funcion para solicitar fecha
-void solicitudFecha( int *dia, int *mes, int *anio, int guardarFecha){
+void solicitudFecha( int *diaSolicitud, int *mesSolicitud, int *anioSolicitud){
 
     // dia_ingresado, mes_ingresado, anio_ingresado;
     int fecha_valida = 0;
 
-    while (!fecha_valida){
+    char char_dia[3];
+    char char_mes[3];
+    char char_anio[5];
 
-        char char_dia[3];
-        char char_mes[3];
-        char char_anio[5];
+    while (!fecha_valida){
 
         printf("\nIngrese el dia de la fecha correspondiente:");
         fgets(char_dia, sizeof(char_dia),stdin);
@@ -279,18 +279,22 @@ void solicitudFecha( int *dia, int *mes, int *anio, int guardarFecha){
         fgets(char_anio, sizeof(char_anio),stdin);
         getchar();
 
-        fecha_valida = verificarFecha(char_dia,char_mes,char_anio, guardarFecha);
+        fecha_valida = verificarFecha(char_dia,char_mes,char_anio,diaSolicitud, mesSolicitud, anioSolicitud);
         if(!fecha_valida){
             printf("\nLa fecha ingresada es invalida. Intentelo nuevamente.\n");
         }
     }
 
+    *diaSolicitud = atoi(char_dia);
+    *mesSolicitud = atoi(char_mes);
+    *anioSolicitud = atoi(char_anio);
+
     printf("========================================================================================\n");
     printf("\n");
-    printf("\t\t\t\t La fecha ingresada es: %02d/%02d/%d \n\n ", *dia, *mes, *anio);
+    printf("\t\t\t\t La fecha ingresada es: %02d/%02d/%d \n\n ", *diaSolicitud, *mesSolicitud, *anioSolicitud);
 
 }
-int verificarFecha(char *char_dia, char *char_mes, char *char_anio, int guardarFecha){
+int verificarFecha(char *char_dia, char *char_mes, char *char_anio, int *int_dia, int *int_mes, int *int_anio){
 
     //Verificar si el año es valido
     if(!validarNumeros(char_anio)){
@@ -298,9 +302,10 @@ int verificarFecha(char *char_dia, char *char_mes, char *char_anio, int guardarF
 
     }
     else{
-        anio = atoi(char_anio);
+        *int_anio = atoi(char_anio);
     }
-    if(anio < 1900 || anio > 2100){
+
+    if(*int_anio < 1900 || *int_anio > 2100){
         printf("\nEl anio ingresado es invalido\n");
         return 0;
     }
@@ -311,9 +316,10 @@ int verificarFecha(char *char_dia, char *char_mes, char *char_anio, int guardarF
         return 0;
     }
     else{
-        mes = atoi(char_mes);
+        *int_mes = atoi(char_mes);
     }
-    if(mes < 1 || mes > 12){
+
+    if(*int_mes < 1 || *int_mes > 12){
         printf("\nEl mes ingresado es invalido, recuerde ingresar un mes del 1 al 12\n");
         return 0; //mes invalido
     }
@@ -323,15 +329,15 @@ int verificarFecha(char *char_dia, char *char_mes, char *char_anio, int guardarF
         return 0;
     }
     else{
-        dia = atoi(char_dia);
+        *int_dia = atoi(char_dia);
     }
 
     int dias;
 
-    switch(mes){
+    switch(*int_mes){
         case 2: //febrero
         //Verifica si es un año bisiesto
-        if((anio % 4 == 0 && anio % 100 != 0) || anio % 400 == 0 ){
+        if((*int_anio % 4 == 0 && *int_anio % 100 != 0) || *int_anio % 400 == 0 ){
             dias = 29;
         }else{
             dias = 28;
@@ -348,7 +354,7 @@ int verificarFecha(char *char_dia, char *char_mes, char *char_anio, int guardarF
             dias = 31;
         break;
     }
-    if (dia < 1 || dia > dias){
+    if (*int_dia < 1 || *int_dia > dias){
         printf("\nEl dia ingresado esta por fuera del rango permitido del mes.\n");
         return 0; //Dia invalido
     }
@@ -456,7 +462,7 @@ void guardarMovimientosEnArchivo(movimientoInfo movimiento){
     fclose(archivo);
 }
 
-void registrarMovimiento(int nro_cuenta, float monto, char tipo_movimiento){
+void registrarMovimiento(int nro_cuenta, int monto, char tipo_movimiento){
     movimientoInfo nuevo_movimiento;
 
     nuevo_movimiento.nro_cuenta = nro_cuenta;
@@ -464,7 +470,7 @@ void registrarMovimiento(int nro_cuenta, float monto, char tipo_movimiento){
     nuevo_movimiento.tipo = tipo_movimiento;
     nuevo_movimiento.dia = dia;
     nuevo_movimiento.mes = mes;
-    nuevo_movimiento.mes = anio;
+    nuevo_movimiento.anio = anio;
 
     movimientos[numero_movimientos] = nuevo_movimiento;
     numero_movimientos++;
@@ -492,7 +498,7 @@ void solicitarDeposito(cuenta *cuenta){
         }
     }
 
-    registrarMovimiento(cuenta->cuenta_cliente, monto, "D");
+    registrarMovimiento(cuenta->cuenta_cliente, monto, 'D');
 
 }
 
@@ -510,7 +516,7 @@ void solicitarExtraccion(cuenta *cuenta){
     }
     cuenta->saldo -= monto;
 
-    registrarMovimiento(cuenta->cuenta_cliente, monto, "E");
+    registrarMovimiento(cuenta->cuenta_cliente, monto, 'E');
     return;
 }
 
@@ -852,18 +858,31 @@ void listadoMovimientos(){
     int mes_movimiento;
     int anio_movimiento;
 
+
+    int hay_resultados = 0;
+
     // Solicitud de ingreso de fecha
-    solicitudFecha(&dia_movimiento,&mes_movimiento,&anio_movimiento,0);
+    solicitudFecha(&dia_movimiento,&mes_movimiento,&anio_movimiento);
     for(int i=0;i < numero_movimientos;i++){
+
         if(movimientos[i].dia == dia_movimiento && movimientos[i].mes == mes_movimiento && movimientos[i].anio == anio_movimiento){
-            printf("%c", movimientos[i].tipo);
-            printf("%i", movimientos[i].nro_cuenta);
-            printf("%d", movimientos[i].monto);
-            printf("%i",movimientos[i].dia);
-            printf("%i",movimientos[i].mes);
-            printf("%i",movimientos[i].anio);
+
+            hay_resultados = 1;
+
+            printf("Tipo: %c\n", movimientos[i].tipo);
+            printf("Cuenta: %i\n", movimientos[i].nro_cuenta);
+            printf("Monto: %d\n", movimientos[i].monto);
+            printf("Dia: %i\n",movimientos[i].dia);
+            printf("Mes: %i\n",movimientos[i].mes);
+            printf("Anio: %i\n",movimientos[i].anio);
+            printf("----------------------------\n");
         }
     }
+
+    if (! hay_resultados){
+        printf("\nNo se encontraron resultados\n");
+    }
+
 }
 
 
