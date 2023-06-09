@@ -855,13 +855,13 @@ void listadoMovimientos(){
     // Solicitud de ingreso de fecha
     solicitudFecha(&dia_movimiento,&mes_movimiento,&anio_movimiento,0);
     for(int i=0;i < numero_movimientos;i++){
-        if(movimientoInfo[i].dia == dia_movimiento && movimientoInfo[i].mes == mes_movimiento && movimientoInfo[i].anio == anio_movimiento){
-            printf("%c", movimientoInfo.tipo);
-            printf("%i", movimientoInfo.nro_cuenta);
-            printf("%d", movimientoInfo.monto);
-            printf("%i",movimientoInfo.dia);
-            printf("%i",movimientoInfo.mes);
-            printf("%i",movimientoInfo.anio);
+        if(movimientos[i].dia == dia_movimiento && movimientos[i].mes == mes_movimiento && movimientos[i].anio == anio_movimiento){
+            printf("%c", movimientos[i].tipo);
+            printf("%i", movimientos[i].nro_cuenta);
+            printf("%d", movimientos[i].monto);
+            printf("%i",movimientos[i].dia);
+            printf("%i",movimientos[i].mes);
+            printf("%i",movimientos[i].anio);
         }
     }
 }
