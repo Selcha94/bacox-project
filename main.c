@@ -1,6 +1,5 @@
 //Lista de pendientes
-// 0)Validar fecha al inicio
-// Validar que la fecha que se ingresa sea un numero
+// permitir modificar el importe o finalizar la operación en EXTRACCION
 // 6) Generar un archivo de texto de movimientos para una fecha ingresada por el usuario
 //  - Exportar en un archivo .txt todos los movimientos realizados en una cuenta para una determinada fecha que el usuario especifique por parametro (Falta)
 
@@ -494,7 +493,7 @@ void solicitarDeposito(cuenta *cuenta){
             cuenta->saldo += monto;
         }
         else{
-            printf("Monto del deposito debe ser mayor a cero");
+            printf("\nMonto del deposito debe ser mayor a cero\n");
         }
     }
 
@@ -511,7 +510,7 @@ void solicitarExtraccion(cuenta *cuenta){
     scanf("%i", &monto);
 
     if (cuenta->saldo < monto){
-        scanf("El monto a extraer es mayor al saldo de la cuenta");
+        printf("\nSaldo Insuficiente\n");
         return;
     }
     cuenta->saldo -= monto;
@@ -821,7 +820,7 @@ void realizarExtraccion(){
             return;
         }
     }
-    printf("\nNo existe ninguna cuenta para el numero ingresado");
+    printf("\nNo existe ninguna cuenta para el numero ingresado\n");
     return;
 
 }
@@ -854,10 +853,20 @@ void realizarDeposito(){
 /////////////////////////////////////        FUNCIONES DE LISTA MOVIMIENTOS    ////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void listadoMovimientos(){
+
+    FILE *archivo;
+    archivo = fopen("movimientosListado.txt","a");
+
+    if (archivo == NULL) {
+        printf("No se pudo crear el archivo.\n");
+        return 1;
+    }
+
     int dia_movimiento;
     int mes_movimiento;
     int anio_movimiento;
-
+    int contador_deposito = 0;
+    int contador_extraccion = 0;
 
     int hay_resultados = 0;
 
@@ -869,19 +878,31 @@ void listadoMovimientos(){
 
             hay_resultados = 1;
 
-            printf("Tipo: %c\n", movimientos[i].tipo);
-            printf("Cuenta: %i\n", movimientos[i].nro_cuenta);
-            printf("Monto: %d\n", movimientos[i].monto);
-            printf("Dia: %i\n",movimientos[i].dia);
-            printf("Mes: %i\n",movimientos[i].mes);
-            printf("Anio: %i\n",movimientos[i].anio);
-            printf("----------------------------\n");
+            fprintf(archivo,"Tipo: %c\n", movimientos[i].tipo);
+            fprintf(archivo,"Cuenta: %i\n", movimientos[i].nro_cuenta);
+            fprintf(archivo,"Monto: %d\n", movimientos[i].monto);
+            fprintf(archivo,"Dia: %i\n",movimientos[i].dia);
+            fprintf(archivo,"Mes: %i\n",movimientos[i].mes);
+            fprintf(archivo,"Anio: %i\n",movimientos[i].anio);
+            fprintf(archivo,"----------------------------\n");
+
+            if(movimientos[i].tipo == 'D'){
+                contador_deposito += movimientos[i].monto;
+            }else{
+                contador_extraccion += movimientos[i].monto;
+            }
         }
     }
 
-    if (! hay_resultados){
-        printf("\nNo se encontraron resultados\n");
+    if (!hay_resultados){
+        fprintf(archivo,"\nNo se encontraron resultados\n");
+    }else{
+        fprintf(archivo,"\nTotal deposito: %i\n",contador_deposito);
+        fprintf(archivo,"\nTotal extraccion: %i\n", contador_extraccion);
+        fprintf(archivo,"\nLa diferencia es: %i\n", contador_deposito-contador_extraccion);
+
     }
+    fclose(archivo);
 
 }
 
