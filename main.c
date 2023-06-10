@@ -1,8 +1,3 @@
-//Lista de pendientes
-// permitir modificar el importe o finalizar la operación en EXTRACCION
-// 6) Generar un archivo de texto de movimientos para una fecha ingresada por el usuario
-//  - Exportar en un archivo .txt todos los movimientos realizados en una cuenta para una determinada fecha que el usuario especifique por parametro (Falta)
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////      ZONA DE IMPORTS         ////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -504,17 +499,29 @@ void solicitarDeposito(cuenta *cuenta){
 /*Funcion para realizar Extracciones de dinero.*/
 //En esta funcion, se pasa un puntero al cliente para poder modificar directamente la cuenta del cliente
 void solicitarExtraccion(cuenta *cuenta){
-
-    printf("\nIngrese el monto a extraer de la cuenta:");
+    int operacion_extraccion = 0;
     int monto = 0;
-    scanf("%i", &monto);
+    char terminar_operacion;
 
-    if (cuenta->saldo < monto){
-        printf("\nSaldo Insuficiente\n");
-        return;
+    while(!operacion_extraccion){
+        printf("\nIngrese el monto a extraer de la cuenta:");
+        scanf("%i", &monto);
+
+        if (cuenta->saldo < monto){
+            printf("\nSaldo Insuficiente\n");
+            while(terminar_operacion != 'S' && terminar_operacion != 'N' ){
+                printf("Deseas terminar con la operacion? (S/N):");
+                scanf(" %c",&terminar_operacion);
+                if(terminar_operacion == 'S'){
+                    return 0;
+                }
+            }
+        }
+        else{
+            operacion_extraccion = 1;
+        }
     }
     cuenta->saldo -= monto;
-
     registrarMovimiento(cuenta->cuenta_cliente, monto, 'E');
     return;
 }
@@ -923,7 +930,7 @@ void listaClientes(){
 
         printf("\nNombre: %s\n",clientes[x].nombre);
         printf("Apellido: %s\n",clientes[x].apellido);
-        printf("SEXO: %c\n",clientes[x].sexo);
+        printf("Sexo: %c\n",clientes[x].sexo);
         printf("DNI: %i\n",clientes[x].dni);
         printf("Direccion: %s\n",clientes[x].direccion);
         printf("Telefono: %i\n",clientes[x].telefono);
@@ -978,23 +985,4 @@ void actualizarArchivoCuentas(int linea_a_actualizar, cuenta cuenta_actualizada)
     fclose(archivo);
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////    FUNCIONES DEPRECADAS    //////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Recibe un string y un largo maximo
-// Devuelve 1 si el largo del string es menor o igual al maximo
-// Devuelve 0 en otro caso
-int validar_largo(char* cadena, int largo_maximo){
-
-    printf("%i",strlen(cadena));
-    printf("%i",largo_maximo);
-    return strlen(cadena) <= largo_maximo;
-}
-
-void limpiar_buffer(){
-    char buffer_char = getchar();
-    while(buffer_char != '\n'){
-        buffer_char = getchar();
-    }
-}
